@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import NavMenuApp from "./NavMenu/NavMenuApp";
 import UserLoginApp from "./UserLogin/UserLoginApp";
 import { Counter } from "./Counter";
@@ -7,6 +7,9 @@ import useAuth from "../hooks/useAuth";
 const Mainpage: React.FC = () => {
   const { roles } = useAuth();
   const userRoles = roles.map(role => role.Rol);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState<boolean>(false);
+  
+  // No necesitamos el componente wrapper
   
   return (
     <>
@@ -36,9 +39,14 @@ const Mainpage: React.FC = () => {
       </header>
 
       <div style={{ paddingTop: "4rem", display: "flex" }}>
-        <NavMenuApp />
+        <NavMenuApp onToggle={(collapsed: boolean) => setIsMenuCollapsed(collapsed)} />
         
-        <div style={{ marginLeft: "220px", padding: "20px", width: "100%" }}>
+        <div style={{ 
+          marginLeft: isMenuCollapsed ? "60px" : "220px", 
+          padding: "20px", 
+          width: "100%",
+          transition: "margin-left 0.3s ease-in-out"
+        }}>
           <div className="box p-5">
             <h1 className="title">Bienvenido a Consalud</h1>
             <p className="subtitle">Panel de control principal</p>
