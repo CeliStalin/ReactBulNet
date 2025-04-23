@@ -12,7 +12,7 @@ const Mainpage: React.FC = () => {
     <>
       <header
         style={{
-          backgroundColor: "rgb(0, 203, 191)",
+          backgroundColor: "#04A59B",
           padding: "0.8rem",
           width: "100%",
           position: "fixed",
