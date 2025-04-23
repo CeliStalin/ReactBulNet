@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IUser } from '../../interfaces/IUserAz';
 import { useAuth } from '../../hooks/useAuth';
+import logoutIcon from '../../assets/Group.png';
 
 const UserLoginApp: React.FC = () => {
   const [localUserData, setLocalUserData] = useState<IUser | null>(null);
@@ -130,7 +131,7 @@ const UserLoginApp: React.FC = () => {
         }}
       >
         <img 
-          src="/ruta/a/tu/imagen.png" // Cambia esta ruta por la ubicación de tu imagen
+           src={logoutIcon}
           alt="logout icon"
           style={{
             width: '16px',
