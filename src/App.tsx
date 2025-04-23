@@ -6,7 +6,7 @@ import Login from './components/Login/Login';
 import { NotFound } from './components/NotFound'; 
 import { initializeAuthProvider } from './auth/authProvider';
 import useAuth from './hooks/useAuth';
-import { Mainpage } from './components/MainPage';
+import { Mainpage } from './components/MainPage/MainPage';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 

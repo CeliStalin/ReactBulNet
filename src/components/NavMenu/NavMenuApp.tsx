@@ -1,25 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { ApiGetMenus } from "../../services/GetApiArq";
 import { ElementMenu } from "../../interfaces/IMenusElementos";
-import { Link, useLocation } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import { navMenuStyles } from './styles/navMenu.styles';
+import { MenuItem } from './components/MenuItem';
+import { MenuSection } from './components/MenuSection';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
 }
 
 const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
-  const location = useLocation();
   const { roles } = useAuth();
   const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
-  useEffect(() => {
-    const roleNames = roles.map(role => role.Rol);
-    setUserRoles(roleNames);
-  }, [roles]);
+  const userRoles = roles.map(role => role.Rol);
+  const isAdmin = userRoles.includes("ADMIN");
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -48,7 +46,11 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     fetchMenu();
   }, [userRoles]);
 
-  const isAdmin = userRoles.includes("ADMIN");
+  const handleToggle = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    onToggle?.(newState);
+  };
 
   if (loading) return <p>Cargando menú...</p>;
 
@@ -56,114 +58,44 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     <div className="columns is-gapless">
       <div 
         className="column is-one-fifth has-background-light" 
-        style={{ 
-          minWidth: isCollapsed ? '60px' : '200px', 
-          position: 'absolute', 
-          left: 0,
-          transition: 'all 0.3s ease-in-out',
-          overflow: 'hidden'
-        }}
+        style={navMenuStyles.container(isCollapsed)}
       >
         <aside className="menu p-4">
           <p 
             className="menu-label" 
-            style={{ 
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-            onClick={() => {
-              setIsCollapsed(!isCollapsed);
-              if (onToggle) {
-                onToggle(!isCollapsed);
-              }
-            }}
+            style={navMenuStyles.menuLabel}
+            onClick={handleToggle}
           >
             {!isCollapsed && <span>Menú</span>}
-            <span style={{ marginLeft: isCollapsed ? '0' : '10px' }}>
+            <span style={navMenuStyles.menuIcon(isCollapsed)}>
               {isCollapsed ? '☰' : '◀'}
             </span>
           </p>
           
           {!isCollapsed && (
             <ul className="menu-list">
-              {/* Menú comun para todos los usuarios */}
-              <li>
-                <Link
-                  to="/"
-                  className={location.pathname === "/" ? "is-active" : ""}
-                  style={{
-                    backgroundColor: location.pathname === "/" ? '#00cbbf' : '',
-                    color: location.pathname === "/" ? 'white' : '',
-                  }}
-                >
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/profile"
-                  className={location.pathname === "/profile" ? "is-active" : ""}
-                  style={{
-                    backgroundColor: location.pathname === "/profile" ? '#00cbbf' : '',
-                    color: location.pathname === "/profile" ? 'white' : '',
-                  }}
-                >
-                  Mi Perfil
-                </Link>
-              </li>
+              <MenuSection>
+                <MenuItem to="/" label="Inicio" />
+                <MenuItem to="/profile" label="Mi Perfil" />
+              </MenuSection>
 
-              {/* Menu solo para adm*/}
               {isAdmin && (
-                <>
-                  <p className="menu-label mt-4">Administración</p>
-                  <li>
-                    <Link
-                      to="/admin"
-                      className={location.pathname === "/admin" ? "is-active" : ""}
-                      style={{
-                        backgroundColor: location.pathname === "/admin" ? '#00cbbf' : '',
-                        color: location.pathname === "/admin" ? 'white' : '',
-                      }}
-                    >
-                      Panel de Admin
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/dashboard"
-                      className={location.pathname === "/dashboard" ? "is-active" : ""}
-                      style={{
-                        backgroundColor: location.pathname === "/dashboard" ? '#00cbbf' : '',
-                        color: location.pathname === "/dashboard" ? 'white' : '',
-                      }}
-                    >
-                      Dashboard
-                    </Link>
-                  </li>
-                </>
+                <MenuSection title="Administración">
+                  <MenuItem to="/admin" label="Panel de Admin" />
+                  <MenuItem to="/dashboard" label="Dashboard" />
+                </MenuSection>
               )}
 
-              {/* Elementos de menu dinámicos desde la API */}
               {menuItems.length > 0 && (
-                <>
-                  <p className="menu-label mt-4">Aplicaciones</p>
+                <MenuSection title="Aplicaciones">
                   {menuItems.map((item) => (
-                    <li key={item.Id}>
-                      <Link
-                        to={item.Controlador}
-                        className={location.pathname === item.Controlador ? "is-active" : ""}
-                        style={{
-                          backgroundColor: location.pathname === item.Controlador ? '#00cbbf' : '',
-                          color: location.pathname === item.Controlador ? 'white' : '',
-                        }}
-                      >
-                        {item.Descripcion}
-                      </Link>
-                    </li>
+                    <MenuItem 
+                      key={item.Id} 
+                      to={item.Controlador} 
+                      label={item.Descripcion} 
+                    />
                   ))}
-                </>
+                </MenuSection>
               )}
             </ul>
           )}
