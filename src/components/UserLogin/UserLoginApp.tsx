@@ -8,9 +8,7 @@ const UserLoginApp: React.FC = () => {
   const { logout, usuario } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
-   
     if (usuario) {
       setLocalUserData(usuario);
       return;
@@ -55,10 +53,27 @@ const UserLoginApp: React.FC = () => {
     logout(); 
   };
 
+  // Obtener nombre y apellido de displayName
+  const getNameAndSurname = () => {
+    if (effectiveUserData?.displayName) {
+      const parts = effectiveUserData.displayName.split(' ');
+      if (parts.length >= 2) {
+        return `${parts[0]} ${parts[1]}`;
+      }
+      return effectiveUserData.displayName;
+    }
+    return '';
+  };
+
   return (
     <div
       className="identify"
-      style={{ position: 'absolute', right: '20px', top: '1px', display: 'flex', alignItems: 'center' }}
+      style={{ 
+        position: 'relative',
+        display: 'flex', 
+        alignItems: 'center',
+        gap: '15px'
+      }}
       ref={menuRef}
     >
       <div 
@@ -86,12 +101,44 @@ const UserLoginApp: React.FC = () => {
         />
         
         {effectiveUserData && (
-          <div style={{ color: '#ffffff', fontSize: '0.75rem' }}>
-            <div>{effectiveUserData.jobTitle}</div>
-            <div>{effectiveUserData.displayName}</div>
+          <div style={{ color: '#ffffff', fontSize: '0.9rem' }}>
+            <div>{getNameAndSurname()}</div>
           </div>
         )}
       </div>
+
+      <button
+        onClick={handleLogout}
+        style={{
+          backgroundColor: 'transparent',
+          border: 'none',
+          padding: '6px 12px',
+          color: 'white',
+          fontSize: '0.9rem',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        <img 
+          src="/ruta/a/tu/imagen.png" // Cambia esta ruta por la ubicación de tu imagen
+          alt="logout icon"
+          style={{
+            width: '16px',
+            height: '16px',
+          }}
+        />
+        Cerrar sesión
+      </button>
 
       {showInfo && effectiveUserData && (
         <div
@@ -112,24 +159,6 @@ const UserLoginApp: React.FC = () => {
         >
           <p>{effectiveUserData.displayName}</p>
           <p>{effectiveUserData.mail}</p>
-
-          <button
-            onClick={handleLogout}
-            style={{
-              backgroundColor: '#00cbbf',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              color: 'white',
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              width: '100%',
-              fontWeight: 'bold',
-              marginTop: '10px',
-            }}
-          >
-            Cerrar sesión
-          </button>   
         </div>
       )}
     </div>
