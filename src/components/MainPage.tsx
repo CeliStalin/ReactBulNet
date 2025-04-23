@@ -3,6 +3,7 @@ import NavMenuApp from "./NavMenu/NavMenuApp";
 import UserLoginApp from "./UserLogin/UserLoginApp";
 import { Counter } from "./Counter";
 import useAuth from "../hooks/useAuth";
+import logoIconmenu from '../assets/Logo.png';
 
 const Mainpage: React.FC = () => {
   const { roles } = useAuth();
@@ -29,7 +30,7 @@ const Mainpage: React.FC = () => {
       >
         <div style={{ display: "flex", alignItems: "center" }}>
           <img
-            src="https://www.consalud.cl/assets/img/iconos/logo-consalud-bgwhite.png"
+            src= {logoIconmenu}
             alt="Consalud Logo"
             className="image"
             style={{ height: '50px', width: 'auto', marginRight: '1rem' }}

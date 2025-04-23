@@ -6,6 +6,7 @@ import { UserInfo } from './components/UserInfo';
 import { ErrorMessages } from './components/ErrorMessages';
 import * as styles from './Login.styles';
 import { theme } from '../styles/theme';
+import logoIcon from '../../assets/Logo.png';
 
 const Login: React.FC = () => {
   const { 
@@ -70,7 +71,7 @@ const Login: React.FC = () => {
   return (
     <>
       <Header 
-        logoUrl="https://www.consalud.cl/assets/img/iconos/logo-consalud-white.png"
+        logoUrl= {logoIcon}
         altText="Consalud Logo"
       />
 
