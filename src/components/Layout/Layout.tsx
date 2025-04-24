@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import NavMenuApp from '../NavMenu/NavMenuApp';
+import logoIcon from '../../assets/Logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="layout">
       <Header 
-        logoUrl="https://www.consalud.cl/assets/img/iconos/logo-consalud-bgwhite.png"
+        logoUrl= {logoIcon}
         altText="Consalud Logo"
       />
       
