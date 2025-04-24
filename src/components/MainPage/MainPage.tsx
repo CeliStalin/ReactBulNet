@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import useAuth from "../../hooks/useAuth";
 import { Layout } from "../Layout/Layout";
 import { DashboardContent } from "./components/DashboardContent";
@@ -9,7 +9,6 @@ const Mainpage: React.FC = () => {
   const { roles } = useAuth();
   const userRoles = roles.map(role => role.Rol);
   const [activeContent, setActiveContent] = useState<'main' | 'dashboard'>('main');
-  const [isAnimating, setIsAnimating] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   
   const handleMenuClick = (path: string) => {
@@ -17,8 +16,6 @@ const Mainpage: React.FC = () => {
         (path === '/' && activeContent === 'main')) {
       return; // No animar si ya estamos en la misma página
     }
-
-    setIsAnimating(true);
     
     // Primero aplicamos la animación de salida
     if (contentRef.current) {
@@ -40,7 +37,6 @@ const Mainpage: React.FC = () => {
       
       // Limpiamos el estado de animación
       setTimeout(() => {
-        setIsAnimating(false);
         if (contentRef.current) {
           contentRef.current.style.animation = '';
         }

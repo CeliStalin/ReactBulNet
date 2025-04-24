@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
@@ -11,39 +10,6 @@ import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import { LoadingDots } from './components/Login/components/LoadingDots';
 import { useAuthContext } from './context/AuthContext';
-
-const AdminPage: React.FC = () => {
-  return (
-    <div className="container p-4 mt-5">
-      <h1 className="title">Panel de Administración</h1>
-      <p className="subtitle">Esta página solo es accesible para administradores.</p>
-      <div className="content">
-        <ul>
-          <li>Gestión de usuarios</li>
-          <li>Configuración del sistema</li>
-          <li>Reportes y estadísticas</li>
-        </ul>
-      </div>
-    </div>
-  );
-};
-
-const ProfilePage: React.FC = () => {
-  const { usuario } = useAuth();
-  
-  return (
-    <div className="container p-4 mt-5">
-      <h1 className="title">Mi Perfil</h1>
-      {usuario && (
-        <div className="box">
-          <p><strong>Nombre:</strong> {usuario.displayName}</p>
-          <p><strong>Email:</strong> {usuario.mail || usuario.userPrincipalName}</p>
-          <p><strong>Cargo:</strong> {usuario.jobTitle || 'No especificado'}</p>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const App: React.FC = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false);
@@ -110,7 +76,6 @@ const App: React.FC = () => {
             <Route path="/404" element={<NotFound />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Ahora solo necesitamos esta ruta principal para manejar todo el contenido */}
             <Route 
               path="/" 
               element={
