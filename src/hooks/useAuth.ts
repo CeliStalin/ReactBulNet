@@ -18,66 +18,78 @@ interface AuthState {
   errorRoles: string;
   authAttempts: number;
   maxAuthAttempts: number;
+  isInitializing: boolean;
 }
+
+// Mock roles para desarrollo
+const MOCK_ROLES: RolResponse[] = [
+  {
+    IdUsuario: 1,
+    CodApp: "CONSALUD",
+    Rol: "ADMIN",
+    TipoRol: "NORMAL",
+    InicioVigencia: new Date(),
+    EstadoReg: "A",
+    FecEstadoReg: new Date(),
+    UsuarioCreacion: "SISTEMA",
+    FechaCreacion: new Date(),
+    FuncionCreacion: "TEST",
+    UsuarioModificacion: "SISTEMA",
+    FechaModificacion: new Date(),
+    FuncionModificacion: "TEST"
+  }
+];
 
 export const useAuth = () => {
   // Estado local con localStorage
   const [isSignedIn, setIsSignedIn] = useLocalStorage<boolean>('isLogin', false);
   const [usuario, setUsuario] = useLocalStorage<IUser | null>('usuario', null);
   const [usuarioAD, setUsuarioAD] = useLocalStorage<UsuarioAd | null>('usuarioAD', null);
-  //const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', []);
-  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', [
-    {
-      IdUsuario: 1,
-      CodApp: "CONSALUD",
-      Rol: "ADMIN",
-      TipoRol: "NORMAL",
-      InicioVigencia: new Date(),
-      EstadoReg: "A",
-      FecEstadoReg: new Date(),
-      UsuarioCreacion: "SISTEMA",
-      FechaCreacion: new Date(),
-      FuncionCreacion: "TEST",
-      UsuarioModificacion: "SISTEMA",
-      FechaModificacion: new Date(),
-      FuncionModificacion: "TEST"
-    }
-  ]);
+  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', MOCK_ROLES);
+  
   // Estado local sin persistencia
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [errorAD, setErrorAD] = useState<string>('');
   const [errorRoles, setErrorRoles] = useState<string>('');
   const [authAttempts, setAuthAttempts] = useState<number>(0);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const maxAuthAttempts = 1;
 
   // Verificar estado de autenticación solo cuando cambia el provider
   useEffect(() => {
-    // Esta función será llamada solo cuando el provider cambie realmente
     const updateState = () => {
       const signedIn = isAuthenticated();
-      // Solo logueamos cuando cambia el estado para reducir el ruido en la consola
       if (signedIn !== isSignedIn) {
         setIsSignedIn(signedIn);
-        // Resetear intentos cuando cambia el estado de autenticación
+        // Si está autenticado y no hay roles, establecer roles mock
+        if (signedIn && (!roles || roles.length === 0)) {
+          setRoles(MOCK_ROLES);
+        }
         setAuthAttempts(0);
       }
     };
 
-    // Nos suscribimos a los cambios del provider
     Providers.onProviderUpdated(updateState);
     
-    // Verificación inicial sin loguear constantemente
+    // Verificación inicial
     const initialSignedIn = isAuthenticated();
     if (initialSignedIn !== isSignedIn) {
       setIsSignedIn(initialSignedIn);
     }
+    
+    // Si está autenticado y no hay roles, establecer roles mock inmediatamente
+    if (initialSignedIn && (!roles || roles.length === 0)) {
+      setRoles(MOCK_ROLES);
+    }
+    
+    // Marcar como inicializado
+    setIsInitializing(false);
 
     return () => {
       Providers.removeProviderUpdatedListener(updateState);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [isSignedIn, roles, setIsSignedIn, setRoles]);
 
   const loadUserData = useCallback(async () => {
     if (!isSignedIn) {
@@ -120,20 +132,29 @@ export const useAuth = () => {
             });
           }
 
+          // Intentar cargar roles, si falla usar MOCK_ROLES
           if (roles.length === 0) {
             getRoles(userData.mail, (res) => {
-              setRoles(res.data);
+              if (res.data && res.data.length > 0) {
+                setRoles(res.data);
+              } else {
+                // Si no hay roles o hay error, usar MOCK_ROLES
+                setRoles(MOCK_ROLES);
+              }
               setErrorRoles(res.error);
             });
           }
+        } else {
+          // Si no hay email, usar MOCK_ROLES
+          setRoles(MOCK_ROLES);
         }
       }
     } catch (err: Error | unknown) {
       setError(err instanceof Error ? err.message : String(err));
-      // No limpiar los datos si ya existen
-      if (!usuario) setUsuario(null);
-      if (!usuarioAD) setUsuarioAD(null);
-      if (roles.length === 0) setRoles([]);
+      // En caso de error, asegurarse de que haya roles mock
+      if (!roles || roles.length === 0) {
+        setRoles(MOCK_ROLES);
+      }
     } finally {
       setLoading(false);
     }
@@ -144,10 +165,8 @@ export const useAuth = () => {
     if (isSignedIn) {
       loadUserData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn]);
+  }, [isSignedIn, loadUserData]);
 
-  // Función para intentar verificar autenticación
   const checkAuthentication = useCallback(() => {
     const authenticated = isAuthenticated();
     if (authenticated !== isSignedIn) {
@@ -158,18 +177,20 @@ export const useAuth = () => {
     return authenticated;
   }, [isSignedIn, setIsSignedIn]);
 
-
   const login = useCallback(async () => {
     try {
       setLoading(true);
       await azureLogin();
-      setAuthAttempts(0); 
+      setAuthAttempts(0);
+      setIsSignedIn(true);
+      // Establecer roles mock inmediatamente al iniciar sesión
+      setRoles(MOCK_ROLES);
     } catch (err: Error | unknown) {
         setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setIsSignedIn, setRoles]);
 
   const logout = useCallback(async () => {
     try {
@@ -179,12 +200,13 @@ export const useAuth = () => {
       setUsuarioAD(null);
       setRoles([]);
       setAuthAttempts(0);
+      setIsSignedIn(false);
     } catch (err: Error | unknown) {
         setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [setRoles, setUsuario, setUsuarioAD]);
+  }, [setRoles, setUsuario, setUsuarioAD, setIsSignedIn]);
 
   const hasRole = useCallback((roleName: string): boolean => {
     return roles.some(role => role.Rol === roleName);
@@ -213,7 +235,8 @@ export const useAuth = () => {
     maxAuthAttempts,
     loadUserData,
     hasRole,
-    hasAnyRole
+    hasAnyRole,
+    isInitializing
   };
 };
 
