@@ -64,23 +64,23 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
   return (
     <div className="columns is-gapless">
       <div 
-        className="column is-one-fifth has-background-light" 
+        className="column has-background-light" 
         style={navMenuStyles.container(isCollapsed)}
       >
-        <aside className="menu p-4">
+        <aside className="menu">
           <p 
             className="menu-label" 
             style={navMenuStyles.menuLabel}
             onClick={handleToggle}
           >
-            {!isCollapsed && <span>Menú</span>}
-            <span style={navMenuStyles.menuIcon(isCollapsed)}>
-              {isCollapsed ? '☰' : '◀'}
+            <span style={navMenuStyles.menuIcon()}>
+              ☰
             </span>
+            {!isCollapsed && <span style={{ marginLeft: '10px' }}>Menú</span>}
           </p>
           
-          {!isCollapsed && (
-            <ul className="menu-list">
+          <div style={navMenuStyles.menuContent(isCollapsed)}>
+            <ul className="menu-list" style={{ padding: 0 }}>
               <MenuSection>
                 <MenuItem to="/" label="Inicio" onClick={handleMenuClick} currentPath={currentPath} />
                 <MenuItem to="/profile" label="Mi Perfil" onClick={handleMenuClick} currentPath={currentPath} />
@@ -107,7 +107,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
                 </MenuSection>
               )}
             </ul>
-          )}
+          </div>
         </aside>
       </div>
     </div>

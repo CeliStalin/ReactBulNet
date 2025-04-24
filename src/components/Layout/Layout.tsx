@@ -1,4 +1,3 @@
-// src/components/Layout/Layout.tsx
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import NavMenuApp from '../NavMenu/NavMenuApp';
@@ -30,7 +29,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick }) => {
         />
         
         <main style={{ 
-          marginLeft: isMenuCollapsed ? "60px" : "220px", 
+          marginLeft: isMenuCollapsed ? "50px" : "220px", 
           padding: "20px", 
           width: "100%",
           transition: "margin-left 0.3s ease-in-out"

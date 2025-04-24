@@ -1,24 +1,43 @@
-// src/components/NavMenu/styles/navMenu.styles.ts
 import { theme } from '../../styles/theme';
 
 export const navMenuStyles = {
   container: (isCollapsed: boolean) => ({
-    minWidth: isCollapsed ? '60px' : '200px',
-    position: 'absolute' as const,
+    width: isCollapsed ? '50px' : '220px',
+    position: 'fixed' as const,
     left: 0,
+    top: '4rem', // Ajustado para que comience después del header
+    height: 'calc(100vh - 4rem)',
     transition: 'all 0.3s ease-in-out',
     overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
+    zIndex: 100,
+    padding: isCollapsed ? '0' : '1rem',
   }),
   
   menuLabel: {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Centramos el contenido
+    padding: '0.75rem',
+    margin: 0,
   },
   
-  menuIcon: (isCollapsed: boolean) => ({
-    marginLeft: isCollapsed ? '0' : '10px',
+  menuIcon: () => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    width: '24px',
+    height: '24px',
+    transition: 'transform 0.3s ease',
+  }),
+  
+  menuContent: (isCollapsed: boolean) => ({
+    opacity: isCollapsed ? 0 : 1,
+    visibility: isCollapsed ? 'hidden' as const : 'visible' as const,
+    transition: 'opacity 0.3s ease, visibility 0.3s ease',
+    padding: isCollapsed ? '0' : '0 0.5rem',
   }),
   
   activeLink: {
@@ -36,10 +55,12 @@ export const navMenuStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.5em 0',
+    padding: '0.75em 0.5em',
     userSelect: 'none' as const,
     color: '#333',
     fontWeight: 'bold',
+    borderRadius: '4px',
+    marginBottom: '0.5rem',
   },
   
   sectionArrow: (isExpanded: boolean) => ({
@@ -54,6 +75,5 @@ export const navMenuStyles = {
     transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out',
     maxHeight: isExpanded ? '500px' : '0',
     opacity: isExpanded ? 1 : 0,
-    marginLeft: '0.75rem',
   })
 };
