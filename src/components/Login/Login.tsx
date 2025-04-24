@@ -1,9 +1,11 @@
-import React from 'react';
+// src/components/Login/Login.tsx
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { Header } from './components/Header';
 import { UserInfo } from './components/UserInfo';
 import { ErrorMessages } from './components/ErrorMessages';
+import { LoadingDots } from './components/LoadingDots';
 import * as styles from './Login.styles';
 import { theme } from '../styles/theme';
 import logoIcon from '../../assets/Logo.png';
@@ -22,13 +24,44 @@ const Login: React.FC = () => {
     logout 
   } = useAuth();
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   if (isSignedIn) {
     return <Navigate to="/" />;
   }
 
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      await login();
+    } catch (error) {
+      console.error('Error during login:', error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const renderAuthButton = () => {
-    if (loading) {
-      return <p className="has-text-centered" style={{ width: '100%' }}>Cargando...</p>;
+    if (loading || isLoggingIn) {
+      return (
+        <div className="field" style={{ width: '100%' }}>
+          <div className="control">
+            <button 
+              className="button is-fullwidth"
+              style={{
+                ...styles.primaryButton,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '48px'
+              }}
+              disabled={true}
+            >
+              <LoadingDots size="small" />
+            </button>
+          </div>
+        </div>
+      );
     }
 
     if (!isSignedIn) {
@@ -38,8 +71,8 @@ const Login: React.FC = () => {
             <button 
               className="button is-fullwidth"
               style={styles.primaryButton}
-              onClick={login}
-              disabled={loading}
+              onClick={handleLogin}
+              disabled={isLoggingIn}
             >
               Iniciar sesión con Azure AD
             </button>
@@ -71,7 +104,7 @@ const Login: React.FC = () => {
   return (
     <>
       <Header 
-        logoUrl= {logoIcon}
+       logoUrl= {logoIcon}
         altText="Consalud Logo"
       />
 
