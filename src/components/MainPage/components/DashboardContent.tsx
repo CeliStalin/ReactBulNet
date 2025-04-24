@@ -1,3 +1,4 @@
+// src/components/MainPage/components/DashboardContent.tsx
 import React from 'react';
 import { Counter } from '../../Counter';
 
@@ -9,7 +10,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ userRoles })
   return (
     <div className="box p-5">
       <h1 className="title">Bienvenido a Consalud</h1>
-      <p className="subtitle">Panel de control principal</p>
+      <p className="subtitle">Panel principal</p>
       
       <div className="content mb-5">
         <p>Tu rol actual: <strong>{userRoles.join(', ') || "Sin roles asignados"}</strong></p>

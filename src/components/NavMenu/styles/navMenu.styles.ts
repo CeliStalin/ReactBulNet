@@ -1,3 +1,4 @@
+// src/components/NavMenu/styles/navMenu.styles.ts
 import { theme } from '../../styles/theme';
 
 export const navMenuStyles = {
@@ -23,5 +24,10 @@ export const navMenuStyles = {
   activeLink: {
     backgroundColor: theme.colors.primary,
     color: theme.colors.white,
+    transition: 'background-color 0.2s ease-in-out',
   },
+  
+  normalLink: {
+    transition: 'background-color 0.2s ease-in-out',
+  }
 };

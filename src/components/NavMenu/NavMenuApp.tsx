@@ -8,13 +8,15 @@ import { MenuSection } from './components/MenuSection';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
+  onMenuItemClick?: (path: string) => void;
 }
 
-const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
+const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) => {
   const { roles } = useAuth();
   const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [currentPath, setCurrentPath] = useState<string>('/');
 
   const userRoles = roles.map(role => role.Rol);
   const isAdmin = userRoles.includes("ADMIN");
@@ -52,6 +54,11 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     onToggle?.(newState);
   };
 
+  const handleMenuClick = (path: string) => {
+    setCurrentPath(path);
+    onMenuItemClick?.(path);
+  };
+
   if (loading) return <p>Cargando menú...</p>;
 
   return (
@@ -75,14 +82,14 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
           {!isCollapsed && (
             <ul className="menu-list">
               <MenuSection>
-                <MenuItem to="/" label="Inicio" />
-                <MenuItem to="/profile" label="Mi Perfil" />
+                <MenuItem to="/" label="Inicio" onClick={handleMenuClick} currentPath={currentPath} />
+                <MenuItem to="/profile" label="Mi Perfil" onClick={handleMenuClick} currentPath={currentPath} />
               </MenuSection>
 
               {isAdmin && (
                 <MenuSection title="Administración">
-                  <MenuItem to="/admin" label="Panel de Admin" />
-                  <MenuItem to="/dashboard" label="Dashboard" />
+                  <MenuItem to="/admin" label="Panel de Admin" onClick={handleMenuClick} currentPath={currentPath} />
+                  <MenuItem to="/dashboard" label="Dashboard" onClick={handleMenuClick} currentPath={currentPath} />
                 </MenuSection>
               )}
 
@@ -92,7 +99,9 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
                     <MenuItem 
                       key={item.Id} 
                       to={item.Controlador} 
-                      label={item.Descripcion} 
+                      label={item.Descripcion}
+                      onClick={handleMenuClick}
+                      currentPath={currentPath}
                     />
                   ))}
                 </MenuSection>
