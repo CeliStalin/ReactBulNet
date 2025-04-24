@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Login from './components/Login/Login';
@@ -9,7 +9,7 @@ import useAuth from './hooks/useAuth';
 import { Mainpage } from './components/MainPage/MainPage';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
-
+import { LoadingDots } from './components/Login/components/LoadingDots';
 
 const AdminPage: React.FC = () => {
   return (
@@ -26,7 +26,6 @@ const AdminPage: React.FC = () => {
     </div>
   );
 };
-
 
 const ProfilePage: React.FC = () => {
   const { usuario } = useAuth();
@@ -46,20 +45,53 @@ const ProfilePage: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
+  const { isInitializing, isSignedIn } = useAuth();
+
   useEffect(() => {
     initializeAuthProvider();
+    
+    // Pequeño delay para asegurar que el provider esté completamente inicializado
+    const timer = setTimeout(() => {
+      setIsAppInitialized(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  // Mostrar loading mientras se inicializa la aplicación
+  if (!isAppInitialized || isInitializing) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <LoadingDots size="large" color="rgb(4, 165, 155)" />
+        <div style={{ color: '#333', fontSize: '16px' }}>
+          Inicializando aplicación...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
       <div className="App">
         <main>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            {/* Login route - solo accesible si NO está autenticado */}
+            <Route 
+              path="/login" 
+              element={isSignedIn ? <Navigate to="/" replace /> : <Login />} 
+            />
+            
             <Route path="/404" element={<NotFound />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-
             <Route 
               path="/" 
               element={

@@ -56,13 +56,39 @@ export const useAuth = () => {
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const maxAuthAttempts = 1;
 
-  // Verificar estado de autenticación solo cuando cambia el provider
+  // Inicialización y verificación de estado de autenticación
   useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      // Dar tiempo al provider para inicializarse
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (!mounted) return;
+
+      const signedIn = isAuthenticated();
+      
+      // Solo actualizar si hay diferencia
+      if (signedIn !== isSignedIn) {
+        setIsSignedIn(signedIn);
+      }
+
+      // Si está autenticado y no hay roles, establecer roles mock
+      if (signedIn && (!roles || roles.length === 0)) {
+        setRoles(MOCK_ROLES);
+      }
+
+      setIsInitializing(false);
+    };
+
+    initializeAuth();
+
     const updateState = () => {
+      if (!mounted) return;
+      
       const signedIn = isAuthenticated();
       if (signedIn !== isSignedIn) {
         setIsSignedIn(signedIn);
-        // Si está autenticado y no hay roles, establecer roles mock
         if (signedIn && (!roles || roles.length === 0)) {
           setRoles(MOCK_ROLES);
         }
@@ -71,25 +97,12 @@ export const useAuth = () => {
     };
 
     Providers.onProviderUpdated(updateState);
-    
-    // Verificación inicial
-    const initialSignedIn = isAuthenticated();
-    if (initialSignedIn !== isSignedIn) {
-      setIsSignedIn(initialSignedIn);
-    }
-    
-    // Si está autenticado y no hay roles, establecer roles mock inmediatamente
-    if (initialSignedIn && (!roles || roles.length === 0)) {
-      setRoles(MOCK_ROLES);
-    }
-    
-    // Marcar como inicializado
-    setIsInitializing(false);
 
     return () => {
+      mounted = false;
       Providers.removeProviderUpdatedListener(updateState);
     };
-  }, [isSignedIn, roles, setIsSignedIn, setRoles]);
+  }, []);
 
   const loadUserData = useCallback(async () => {
     if (!isSignedIn) {

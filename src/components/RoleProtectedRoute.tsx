@@ -10,10 +10,15 @@ interface RoleProtectedRouteProps {
 }
 
 const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowedRoles }) => {
-  const { isSignedIn, roles, checkAuthentication, authAttempts, maxAuthAttempts } = useAuth();
+  const { isSignedIn, roles, checkAuthentication, authAttempts, maxAuthAttempts, isInitializing, loading } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
+    // Si está inicializando o cargando, no hacer nada más
+    if (isInitializing || loading) {
+      return;
+    }
+
     if (isSignedIn) {
       setIsChecking(false);
       return;
@@ -33,9 +38,9 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
     }, 1000 * (authAttempts + 1)); 
     
     return () => clearTimeout(timer);
-  }, [isSignedIn, authAttempts, maxAuthAttempts, checkAuthentication]);
+  }, [isSignedIn, authAttempts, maxAuthAttempts, checkAuthentication, isInitializing, loading]);
 
-  if (isChecking) {
+  if (isChecking || isInitializing || loading) {
     return (
       <div style={{
         display: 'flex',
@@ -47,7 +52,9 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
       }}>
         <LoadingDots size="medium" color="rgb(4, 165, 155)" />
         <div style={{ color: '#333', fontSize: '16px' }}>
-          Verificando autenticación... Intento {authAttempts + 1}/{maxAuthAttempts}
+          {isInitializing ? 'Inicializando...' : 
+           loading ? 'Cargando...' : 
+           `Verificando autenticación... Intento ${authAttempts + 1}/${maxAuthAttempts}`}
         </div>
       </div>
     );

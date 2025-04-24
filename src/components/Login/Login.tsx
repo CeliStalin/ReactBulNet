@@ -1,6 +1,5 @@
 // src/components/Login/Login.tsx
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { Header } from './components/Header';
 import { UserInfo } from './components/UserInfo';
@@ -21,22 +20,18 @@ const Login: React.FC = () => {
     errorAD, 
     errorRoles, 
     login, 
-    logout 
+    logout
   } = useAuth();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  if (isSignedIn) {
-    return <Navigate to="/" />;
-  }
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
     try {
       await login();
+      // La navegación será manejada por el componente App
     } catch (error) {
       console.error('Error during login:', error);
-    } finally {
       setIsLoggingIn(false);
     }
   };
