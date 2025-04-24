@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IUser } from '../../interfaces/IUserAz';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 import logoutIcon from '../../assets/Group.png';
 
 const UserLoginApp: React.FC = () => {
   const [localUserData, setLocalUserData] = useState<IUser | null>(null);
   const [showInfo, setShowInfo] = useState<boolean>(false);
-  const { logout, usuario } = useAuth();
+  const { logout, usuario, isLoggingOut } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,6 +41,11 @@ const UserLoginApp: React.FC = () => {
     };
   }, [showInfo]);
 
+  // Log de estado de logout
+  useEffect(() => {
+    console.log('[UserLoginApp] isLoggingOut:', isLoggingOut);
+  }, [isLoggingOut]);
+
   const handleToggleMenu = () => {
     setShowInfo(prevState => !prevState);
   };
@@ -48,10 +53,17 @@ const UserLoginApp: React.FC = () => {
   const effectiveUserData = usuario || localUserData;
   const avatarSrc = effectiveUserData?.photo || 'https://www.gravatar.com/avatar?d=mp';
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    console.log('[UserLoginApp] Botón logout clickeado');
     setLocalUserData(null);
-    setShowInfo(false); 
-    logout(); 
+    setShowInfo(false);
+    try {
+      // Esperar a que logout complete
+      await logout();
+      console.log('[UserLoginApp] Logout completado');
+    } catch (error) {
+      console.error('[UserLoginApp] Error en logout:', error);
+    }
   };
 
   // Obtener nombre y apellido de displayName
@@ -110,21 +122,25 @@ const UserLoginApp: React.FC = () => {
 
       <button
         onClick={handleLogout}
+        disabled={isLoggingOut}
         style={{
           backgroundColor: 'transparent',
           border: 'none',
           padding: '6px 12px',
           color: 'white',
           fontSize: '0.9rem',
-          cursor: 'pointer',
+          cursor: isLoggingOut ? 'wait' : 'pointer',
           fontWeight: 'bold',
           transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
+          opacity: isLoggingOut ? 0.7 : 1
         }}
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+          if (!isLoggingOut) {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+          }
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
@@ -138,7 +154,7 @@ const UserLoginApp: React.FC = () => {
             height: '16px',
           }}
         />
-        Cerrar sesión
+        {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
       </button>
 
       {showInfo && effectiveUserData && (

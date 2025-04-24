@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
@@ -10,6 +9,7 @@ import { Mainpage } from './components/MainPage/MainPage';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import { LoadingDots } from './components/Login/components/LoadingDots';
+import { useAuthContext } from './context/AuthContext';
 
 const AdminPage: React.FC = () => {
   return (
@@ -47,11 +47,11 @@ const ProfilePage: React.FC = () => {
 const App: React.FC = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false);
   const { isInitializing, isSignedIn } = useAuth();
+  const { isLoggingOut } = useAuthContext(); // Obtener directamente del contexto
 
   useEffect(() => {
     initializeAuthProvider();
     
-    // Pequeño delay para asegurar que el provider esté completamente inicializado
     const timer = setTimeout(() => {
       setIsAppInitialized(true);
     }, 500);
@@ -59,7 +59,38 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Mostrar loading mientras se inicializa la aplicación
+  // Log detallado de estados
+  useEffect(() => {
+    console.log('[App] Estados actuales:', {
+      isAppInitialized,
+      isInitializing,
+      isLoggingOut,
+      isSignedIn
+    });
+  }, [isAppInitialized, isInitializing, isLoggingOut, isSignedIn]);
+
+  // Esta es la clave: verificamos isLoggingOut ANTES de cualquier otra condición
+  if (isLoggingOut) {
+    console.log('[App] MOSTRANDO PANTALLA DE LOGOUT');
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '16px',
+        backgroundColor: '#ffffff'
+      }}>
+        <LoadingDots size="large" color="rgb(4, 165, 155)" />
+        <div style={{ color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+          Cerrando sesión...
+        </div>
+      </div>
+    );
+  }
+
+  // Después verificamos la inicialización
   if (!isAppInitialized || isInitializing) {
     return (
       <div style={{

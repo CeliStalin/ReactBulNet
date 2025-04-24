@@ -10,10 +10,18 @@ interface RoleProtectedRouteProps {
 }
 
 const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowedRoles }) => {
-  const { isSignedIn, roles, checkAuthentication, authAttempts, maxAuthAttempts, isInitializing, loading } = useAuth();
+  const { isSignedIn, roles, checkAuthentication, authAttempts, maxAuthAttempts, isInitializing, loading, isLoggingOut } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
+    console.log('[RoleProtectedRoute] Estado isLoggingOut:', isLoggingOut);
+    
+    // Si está cerrando sesión, mostrar siempre la pantalla de logout
+    if (isLoggingOut) {
+      console.log('[RoleProtectedRoute] MOSTRANDO PANTALLA DE LOGOUT');
+      return;
+    }
+    
     // Si está inicializando o cargando, no hacer nada más
     if (isInitializing || loading) {
       return;
@@ -38,7 +46,28 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
     }, 1000 * (authAttempts + 1)); 
     
     return () => clearTimeout(timer);
-  }, [isSignedIn, authAttempts, maxAuthAttempts, checkAuthentication, isInitializing, loading]);
+  }, [isSignedIn, authAttempts, maxAuthAttempts, checkAuthentication, isInitializing, loading, isLoggingOut]);
+
+  // Primero verificamos si está cerrando sesión
+  if (isLoggingOut === true) {
+    console.log('[RoleProtectedRoute] RENDERIZANDO PANTALLA DE LOGOUT');
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '16px',
+        backgroundColor: '#ffffff'
+      }}>
+        <LoadingDots size="medium" color="rgb(4, 165, 155)" />
+        <div style={{ color: '#333', fontSize: '16px', fontWeight: 'bold' }}>
+          Cerrando sesión...
+        </div>
+      </div>
+    );
+  }
 
   if (isChecking || isInitializing || loading) {
     return (

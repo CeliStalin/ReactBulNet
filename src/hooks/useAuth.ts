@@ -1,3 +1,4 @@
+// src/hooks/useAuth.ts
 import { useState, useEffect, useCallback } from 'react';
 import { Providers } from '@microsoft/mgt-element';
 import { login as azureLogin, logout as azureLogout, isAuthenticated } from '../../src/auth/authProvider';
@@ -6,6 +7,7 @@ import useLocalStorage from '../../src/hooks/useLocalStorage';
 import { IUser } from '../interfaces/IUserAz';
 import { RolResponse } from '../interfaces/IRol';
 import { UsuarioAd } from '../interfaces/IUsuarioAD';
+import { useAuthContext } from '../context/AuthContext';
 
 interface AuthState {
   isSignedIn: boolean;
@@ -19,6 +21,7 @@ interface AuthState {
   authAttempts: number;
   maxAuthAttempts: number;
   isInitializing: boolean;
+  isLoggingOut: boolean;
 }
 
 // Mock roles para desarrollo
@@ -41,6 +44,8 @@ const MOCK_ROLES: RolResponse[] = [
 ];
 
 export const useAuth = () => {
+  const { isLoggingOut, setIsLoggingOut } = useAuthContext();
+  
   // Estado local con localStorage
   const [isSignedIn, setIsSignedIn] = useLocalStorage<boolean>('isLogin', false);
   const [usuario, setUsuario] = useLocalStorage<IUser | null>('usuario', null);
@@ -78,7 +83,9 @@ export const useAuth = () => {
         setRoles(MOCK_ROLES);
       }
 
-      setIsInitializing(false);
+      if (!isLoggingOut) {
+        setIsInitializing(false);
+      }
     };
 
     initializeAuth();
@@ -145,26 +152,22 @@ export const useAuth = () => {
             });
           }
 
-          // Intentar cargar roles, si falla usar MOCK_ROLES
           if (roles.length === 0) {
             getRoles(userData.mail, (res) => {
               if (res.data && res.data.length > 0) {
                 setRoles(res.data);
               } else {
-                // Si no hay roles o hay error, usar MOCK_ROLES
                 setRoles(MOCK_ROLES);
               }
               setErrorRoles(res.error);
             });
           }
         } else {
-          // Si no hay email, usar MOCK_ROLES
           setRoles(MOCK_ROLES);
         }
       }
     } catch (err: Error | unknown) {
       setError(err instanceof Error ? err.message : String(err));
-      // En caso de error, asegurarse de que haya roles mock
       if (!roles || roles.length === 0) {
         setRoles(MOCK_ROLES);
       }
@@ -173,7 +176,6 @@ export const useAuth = () => {
     }
   }, [isSignedIn, setRoles, setUsuario, setUsuarioAD, usuario, usuarioAD, roles]);
 
-  // Efecto para cargar datos solo cuando cambia el estado de autenticación
   useEffect(() => {
     if (isSignedIn) {
       loadUserData();
@@ -196,7 +198,6 @@ export const useAuth = () => {
       await azureLogin();
       setAuthAttempts(0);
       setIsSignedIn(true);
-      // Establecer roles mock inmediatamente al iniciar sesión
       setRoles(MOCK_ROLES);
     } catch (err: Error | unknown) {
         setError(err instanceof Error ? err.message : String(err));
@@ -206,20 +207,33 @@ export const useAuth = () => {
   }, [setIsSignedIn, setRoles]);
 
   const logout = useCallback(async () => {
+    console.log('[useAuth] Iniciando logout...');
+    // Usar el contexto para actualizar el estado inmediatamente
+    setIsLoggingOut(true);
+    
     try {
       setLoading(true);
       await azureLogout();
+      
+      // Limpiar estados
       setUsuario(null);
       setUsuarioAD(null);
       setRoles([]);
       setAuthAttempts(0);
       setIsSignedIn(false);
+      
     } catch (err: Error | unknown) {
-        setError(err instanceof Error ? err.message : String(err));
+      console.error('[useAuth] Error en logout:', err);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
+      // Mantener isLoggingOut por más tiempo
+      setTimeout(() => {
+        console.log('[useAuth] Desactivando isLoggingOut');
+        setIsLoggingOut(false);
+      }, 2000);
     }
-  }, [setRoles, setUsuario, setUsuarioAD, setIsSignedIn]);
+  }, [setRoles, setUsuario, setUsuarioAD, setIsSignedIn, setIsLoggingOut]);
 
   const hasRole = useCallback((roleName: string): boolean => {
     return roles.some(role => role.Rol === roleName);
@@ -249,7 +263,8 @@ export const useAuth = () => {
     loadUserData,
     hasRole,
     hasAnyRole,
-    isInitializing
+    isInitializing,
+    isLoggingOut  // Este ahora viene del contexto
   };
 };
 
