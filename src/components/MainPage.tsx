@@ -15,7 +15,7 @@ const pageTitles: PageTitles = {
   '/dashboard': 'Dashboard',
   '/profile': 'Mi Perfil',
   '/admin': 'Panel de Administración',
-  // Añade más títulos según tus rutas
+  // aqui añadimos las rutas de las app's
 };
 
 const Mainpage: React.FC = () => {
