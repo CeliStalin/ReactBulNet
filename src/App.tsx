@@ -10,6 +10,8 @@ import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import { LoadingDots } from './components/Login/components/LoadingDots';
 import { useAuthContext } from './context/AuthContext';
+import IngresoHerederos from './components/IngresoHerederos/IngresoHerederos';
+import IngresoDocumentos from './components/IngresoDocumentos/IngresoDocumentos';
 
 const App: React.FC = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false);
@@ -81,6 +83,26 @@ const App: React.FC = () => {
               element={
                 <RoleProtectedRoute 
                   element={<Mainpage />} 
+                  allowedRoles={["USER", "ADMIN", "Developers"]} 
+                />
+              } 
+            />
+            
+            <Route 
+              path="/MnHerederos/ingresoHer" 
+              element={
+                <RoleProtectedRoute 
+                  element={<IngresoHerederos />} 
+                  allowedRoles={["USER", "ADMIN", "Developers"]} 
+                />
+              } 
+            />
+            
+            <Route 
+              path="/MnHerederos/ingresoDoc" 
+              element={
+                <RoleProtectedRoute 
+                  element={<IngresoDocumentos />} 
                   allowedRoles={["USER", "ADMIN", "Developers"]} 
                 />
               } 

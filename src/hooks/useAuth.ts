@@ -1,9 +1,9 @@
 // src/hooks/useAuth.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Providers } from '@microsoft/mgt-element';
-import { login as azureLogin, logout as azureLogout, isAuthenticated } from '../../src/auth/authProvider';
-import { getMe, getUsuarioAD, getRoles } from '../../src/auth/authService';
-import useLocalStorage from '../../src/hooks/useLocalStorage';
+import { login as azureLogin, logout as azureLogout, isAuthenticated } from '../auth/authProvider';
+import { getMe, getUsuarioAD, getRoles } from '../auth/authService';
+import useLocalStorage from './useLocalStorage';
 import { IUser } from '../interfaces/IUserAz';
 import { RolResponse } from '../interfaces/IRol';
 import { UsuarioAd } from '../interfaces/IUsuarioAD';
@@ -256,7 +256,7 @@ export const useAuth = () => {
     return allowedRoles.some(role => hasRole(role));
   }, [roles, hasRole]);
 
-  return {
+  return useMemo(() => ({
     isSignedIn,
     usuario,
     usuarioAD,
@@ -275,7 +275,26 @@ export const useAuth = () => {
     hasAnyRole,
     isInitializing,
     isLoggingOut  // Este ahora viene del contexto
-  };
+  }), [
+    isSignedIn,
+    usuario,
+    usuarioAD,
+    roles,
+    loading,
+    error,
+    errorAD,
+    errorRoles,
+    login,
+    logout,
+    checkAuthentication,
+    authAttempts,
+    maxAuthAttempts,
+    loadUserData,
+    hasRole,
+    hasAnyRole,
+    isInitializing,
+    isLoggingOut
+  ]);
 };
 
 export type {

@@ -16,6 +16,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick, pageTitle
     setIsMenuCollapsed(collapsed);
   };
   
+  const handleMenuItemClick = (path: string, title?: string) => {
+    console.log('Layout - Menu item clicked:', path, title); // Debug
+    if (onMenuClick) {
+      onMenuClick(path, title);
+    }
+  };
+  
   return (
     <div className="layout">
       <Header 
@@ -27,7 +34,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick, pageTitle
       <div className="layout-body" style={{ paddingTop: "4rem", display: "flex" }}>
         <NavMenuApp 
           onToggle={handleMenuToggle}
-          onMenuItemClick={onMenuClick}
+          onMenuItemClick={handleMenuItemClick}
         />
         
         <main style={{ 

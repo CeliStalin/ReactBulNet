@@ -2,9 +2,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { ApiGetMenus } from "../../services/GetApiArq";
 import { ElementMenu } from "../../interfaces/IMenusElementos";
 import useAuth from "../../hooks/useAuth";
-import { navMenuStyles } from './styles/navMenu.styles';
-import { MenuItem } from './components/MenuItem';
-import { MenuSection } from './components/MenuSection';
+import { navMenuStyles } from '../NavMenu/styles/navMenu.styles';
+import { MenuItem } from '../NavMenu/components/MenuItem';
+import { MenuSection } from '../NavMenu/components/MenuSection';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
@@ -62,11 +62,11 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
     // Establecer el path actual
     setCurrentPath(`${path}_${itemId}`);
     
-    // Navegar según el tipo de menú
-    if (title === "Ingreso Herederos" || title?.includes("Herederos")) {
+    // Navegar según el título del menú
+    if (title === "Ingreso Herederos") {
       console.log('Navegando a Ingreso Herederos');
       onMenuItemClick?.("/MnHerederos/ingresoHer", title);
-    } else if (title === "Ingreso Documentos" || title?.includes("Documentos")) {
+    } else if (title === "Ingreso Documentos") {
       console.log('Navegando a Ingreso Documentos');
       onMenuItemClick?.("/MnHerederos/ingresoDoc", title);
     } else {

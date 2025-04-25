@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { Layout } from "../Layout/Layout";
 import { DashboardContent } from "./components/DashboardContent";
@@ -15,50 +16,78 @@ const pageTitles: PageTitles = {
   '/dashboard': 'Dashboard',
   '/profile': 'Mi Perfil',
   '/admin': 'Panel de Administración',
-  // Añade más títulos según tus rutas
+  '/MnHerederos/ingresoHer': 'Ingreso Herederos',
+  '/MnHerederos/ingresoDoc': 'Ingreso Documentos'
 };
 
 const Mainpage: React.FC = () => {
   const { roles } = useAuth();
+  const navigate = useNavigate();
   const userRoles = roles.map(role => role.Rol);
   const [activeContent, setActiveContent] = useState<'main' | 'dashboard'>('main');
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
   const contentRef = useRef<HTMLDivElement>(null);
   
-  const handleMenuClick = (path: string) => {
-    // Actualizar el título de la página
-    setCurrentPageTitle(pageTitles[path] || '');
-
-    if ((path === '/dashboard' && activeContent === 'dashboard') || 
-        (path === '/' && activeContent === 'main')) {
-      return; // No animar si ya estamos en la misma página
-    }
+  const handleMenuClick = (path: string, title?: string) => {
+    console.log('MainPage - handleMenuClick:', { path, title }); // Debug
     
-    // Primero aplicamos la animación de salida
-    if (contentRef.current) {
-      contentRef.current.style.animation = 'fadeOutDown 0.3s ease-in forwards';
+    // Actualizar el título de la página
+    setCurrentPageTitle(title || pageTitles[path] || '');
+
+    // Navegar según la ruta
+    if (path === '/MnHerederos/ingresoHer' || path === '/MnHerederos/ingresoDoc') {
+      console.log('Navegando a:', path); // Debug
+      navigate(path);
+      return;
     }
 
-    // Esperamos a que termine la animación de salida antes de cambiar el contenido
-    setTimeout(() => {
-      if (path === '/dashboard') {
-        setActiveContent('dashboard');
-      } else if (path === '/') {
-        setActiveContent('main');
-      }
-      
-      // Aplicamos la animación de entrada
-      if (contentRef.current) {
-        contentRef.current.style.animation = 'fadeInUp 0.3s ease-out forwards';
-      }
-      
-      // Limpiamos el estado de animación
-      setTimeout(() => {
+    // Para la página de inicio
+    if (path === '/') {
+      if (activeContent !== 'main') {
         if (contentRef.current) {
-          contentRef.current.style.animation = '';
+          contentRef.current.style.animation = 'fadeOutDown 0.3s ease-in forwards';
         }
-      }, 300);
-    }, 300);
+        
+        setTimeout(() => {
+          setActiveContent('main');
+          
+          if (contentRef.current) {
+            contentRef.current.style.animation = 'fadeInUp 0.3s ease-out forwards';
+          }
+          
+          setTimeout(() => {
+            if (contentRef.current) {
+              contentRef.current.style.animation = '';
+            }
+          }, 300);
+        }, 300);
+      }
+      return;
+    }
+
+    // Para el dashboard
+    if (path === '/dashboard') {
+      if (activeContent !== 'dashboard') {
+        if (contentRef.current) {
+          contentRef.current.style.animation = 'fadeOutDown 0.3s ease-in forwards';
+        }
+        
+        setTimeout(() => {
+          setActiveContent('dashboard');
+          
+          if (contentRef.current) {
+            contentRef.current.style.animation = 'fadeInUp 0.3s ease-out forwards';
+          }
+          
+          setTimeout(() => {
+            if (contentRef.current) {
+              contentRef.current.style.animation = '';
+            }
+          }, 300);
+        }, 300);
+      }
+      return;
+    }
   };
   
   return (
