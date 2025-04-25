@@ -50,7 +50,7 @@ export const useAuth = () => {
   const [isSignedIn, setIsSignedIn] = useLocalStorage<boolean>('isLogin', false);
   const [usuario, setUsuario] = useLocalStorage<IUser | null>('usuario', null);
   const [usuarioAD, setUsuarioAD] = useLocalStorage<UsuarioAd | null>('usuarioAD', null);
-  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', MOCK_ROLES);
+  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', []); //MOCK_ROLES
   
   // Estado local sin persistencia
   const [loading, setLoading] = useState<boolean>(false);
@@ -77,6 +77,16 @@ export const useAuth = () => {
       if (signedIn !== isSignedIn) {
         setIsSignedIn(signedIn);
       }
+
+      // Obtener roles del usuario 
+      //usuario?.mail!
+      getRoles("stalin.celi@consalud.cl", (response) => {
+        if (response.error) {
+          console.error('Error obteniendo roles:', response.error);
+          return;
+        }
+        setRoles(response.data);
+      });
 
       // Si está autenticado y no hay roles, establecer roles mock
       if (signedIn && (!roles || roles.length === 0)) {

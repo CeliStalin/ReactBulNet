@@ -81,7 +81,7 @@ const App: React.FC = () => {
               element={
                 <RoleProtectedRoute 
                   element={<Mainpage />} 
-                  allowedRoles={["USER", "ADMIN"]} 
+                  allowedRoles={["USER", "ADMIN", "Developers"]} 
                 />
               } 
             />
