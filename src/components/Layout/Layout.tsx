@@ -5,10 +5,11 @@ import logoIcon from '../../assets/Logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
-  onMenuClick?: (path: string) => void;
+  onMenuClick?: (path: string, title?: string) => void;
+  pageTitle?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick, pageTitle }) => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState<boolean>(false);
   
   const handleMenuToggle = (collapsed: boolean) => {
@@ -20,6 +21,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick }) => {
       <Header 
         logoUrl={logoIcon}
         altText="Consalud Logo"
+        pageTitle={pageTitle}
       />
       
       <div className="layout-body" style={{ paddingTop: "4rem", display: "flex" }}>

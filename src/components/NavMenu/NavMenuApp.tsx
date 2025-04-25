@@ -8,7 +8,7 @@ import { MenuSection } from './components/MenuSection';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
-  onMenuItemClick?: (path: string) => void;
+  onMenuItemClick?: (path: string, title?: string) => void;
 }
 
 const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) => {
@@ -54,9 +54,9 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
     onToggle?.(newState);
   };
 
-  const handleMenuClick = (path: string) => {
+  const handleMenuClick = (path: string, title?: string) => {
     setCurrentPath(path);
-    onMenuItemClick?.(path);
+    onMenuItemClick?.(path, title);
   };
 
   if (loading) return <p>Cargando menú...</p>;
@@ -82,14 +82,34 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
           <div style={navMenuStyles.menuContent(isCollapsed)}>
             <ul className="menu-list" style={{ padding: 0 }}>
               <MenuSection>
-                <MenuItem to="/" label="Inicio" onClick={handleMenuClick} currentPath={currentPath} />
-                <MenuItem to="/profile" label="Mi Perfil" onClick={handleMenuClick} currentPath={currentPath} />
+                <MenuItem 
+                  to="/" 
+                  label="Inicio" 
+                  onClick={(path) => handleMenuClick(path, "Inicio")} 
+                  currentPath={currentPath} 
+                />
+                <MenuItem 
+                  to="/profile" 
+                  label="Mi Perfil" 
+                  onClick={(path) => handleMenuClick(path, "Mi Perfil")} 
+                  currentPath={currentPath} 
+                />
               </MenuSection>
 
               {isAdmin && (
                 <MenuSection title="Administración">
-                  <MenuItem to="/admin" label="Panel de Admin" onClick={handleMenuClick} currentPath={currentPath} />
-                  <MenuItem to="/dashboard" label="Dashboard" onClick={handleMenuClick} currentPath={currentPath} />
+                  <MenuItem 
+                    to="/admin" 
+                    label="Panel de Admin" 
+                    onClick={(path) => handleMenuClick(path, "Panel de Administración")} 
+                    currentPath={currentPath} 
+                  />
+                  <MenuItem 
+                    to="/dashboard" 
+                    label="Dashboard" 
+                    onClick={(path) => handleMenuClick(path, "Dashboard")} 
+                    currentPath={currentPath} 
+                  />
                 </MenuSection>
               )}
 
@@ -100,7 +120,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
                       key={item.Id} 
                       to={item.Controlador} 
                       label={item.Descripcion}
-                      onClick={handleMenuClick}
+                      onClick={(path) => handleMenuClick(path, item.Nombre)}
                       currentPath={currentPath}
                     />
                   ))}

@@ -1,79 +1,80 @@
-import React, { useState } from "react";
-import NavMenuApp from "./NavMenu/NavMenuApp";
-import UserLoginApp from "./UserLogin/UserLoginApp";
-import { Counter } from "./Counter";
+import React, { useState, useRef } from "react";
 import useAuth from "../hooks/useAuth";
-import logoIconmenu from '../assets/Logo.png';
+import { Layout } from "./Layout/Layout";
+import { DashboardContent } from "./MainPage/components/DashboardContent";
+import { MainContent } from "./MainPage/components/MainContent";
+import './MainPage/styles/animations.css';
+
+// Interfaz para los títulos de las páginas
+interface PageTitles {
+  [key: string]: string;
+}
+
+const pageTitles: PageTitles = {
+  '/': 'Inicio',
+  '/dashboard': 'Dashboard',
+  '/profile': 'Mi Perfil',
+  '/admin': 'Panel de Administración',
+  // Añade más títulos según tus rutas
+};
 
 const Mainpage: React.FC = () => {
   const { roles } = useAuth();
   const userRoles = roles.map(role => role.Rol);
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState<boolean>(false);
+  const [activeContent, setActiveContent] = useState<'main' | 'dashboard'>('main');
+  const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
+  const contentRef = useRef<HTMLDivElement>(null);
   
-  // No necesitamos el componente wrapper
+  const handleMenuClick = (path: string, title?: string) => {
+    // Actualizar el título de la página: usar el título proporcionado o buscar en el mapa
+    setCurrentPageTitle(title || pageTitles[path] || '');
+
+    if ((path === '/dashboard' && activeContent === 'dashboard') || 
+        (path === '/' && activeContent === 'main')) {
+      return; // No animar si ya estamos en la misma página
+    }
+    
+    // Primero aplicamos la animación de salida
+    if (contentRef.current) {
+      contentRef.current.style.animation = 'fadeOutDown 0.3s ease-in forwards';
+    }
+
+    // Esperamos a que termine la animación de salida antes de cambiar el contenido
+    setTimeout(() => {
+      if (path === '/dashboard') {
+        setActiveContent('dashboard');
+      } else if (path === '/') {
+        setActiveContent('main');
+      }
+      
+      // Aplicamos la animación de entrada
+      if (contentRef.current) {
+        contentRef.current.style.animation = 'fadeInUp 0.3s ease-out forwards';
+      }
+      
+      // Limpiamos el estado de animación
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.style.animation = '';
+        }
+      }, 300);
+    }, 300);
+  };
   
   return (
-    <>
-      <header
-        style={{
-          backgroundColor: "#04A59B",
-          padding: "0.8rem",
-          width: "100%",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          zIndex: 1000,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+    <Layout onMenuClick={handleMenuClick} pageTitle={currentPageTitle}>
+      <div 
+        ref={contentRef}
+        className="content-container"
+        style={{ minHeight: '400px' }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <img
-            src= {logoIconmenu}
-            alt="Consalud Logo"
-            className="image"
-            style={{ height: '50px', width: 'auto', marginRight: '1rem' }}
-          />
-        </div>
-        <UserLoginApp />
-      </header>
-
-      <div style={{ paddingTop: "4rem", display: "flex" }}>
-        <NavMenuApp onToggle={(collapsed: boolean) => setIsMenuCollapsed(collapsed)} />
-        
-        <div style={{ 
-          marginLeft: isMenuCollapsed ? "60px" : "220px", 
-          padding: "20px", 
-          width: "100%",
-          transition: "margin-left 0.3s ease-in-out"
-        }}>
-          <div className="box p-5">
-            <h1 className="title">Bienvenido a Consalud</h1>
-            <p className="subtitle">Panel de control principal</p>
-            
-            <div className="content mb-5">
-              <p>Tu rol actual: <strong>{userRoles.join(', ') || "Sin roles asignados"}</strong></p>
-              
-              {userRoles.includes("ADMIN") ? (
-                <p className="notification is-info is-light">
-                  Como administrador, tienes acceso completo al sistema.
-                </p>
-              ) : (
-                <p className="notification is-success is-light">
-                  Como usuario, tienes acceso a las funciones básicas del sistema.
-                </p>
-              )}
-            </div>
-            
-            <div className="box has-background-light p-4">
-              <h2 className="subtitle">Contador de demostración</h2>
-              <Counter value={10} />
-            </div>
-          </div>
-        </div>
+        {activeContent === 'main' ? (
+          <MainContent />
+        ) : (
+          <DashboardContent userRoles={userRoles} />
+        )}
       </div>
-    </>
+    </Layout>
   );
 };
 

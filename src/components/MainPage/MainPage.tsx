@@ -5,13 +5,30 @@ import { DashboardContent } from "./components/DashboardContent";
 import { MainContent } from "./components/MainContent";
 import './styles/animations.css';
 
+// Interfaz para los títulos de las páginas
+interface PageTitles {
+  [key: string]: string;
+}
+
+const pageTitles: PageTitles = {
+  '/': 'Inicio',
+  '/dashboard': 'Dashboard',
+  '/profile': 'Mi Perfil',
+  '/admin': 'Panel de Administración',
+  // Añade más títulos según tus rutas
+};
+
 const Mainpage: React.FC = () => {
   const { roles } = useAuth();
   const userRoles = roles.map(role => role.Rol);
   const [activeContent, setActiveContent] = useState<'main' | 'dashboard'>('main');
+  const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
   const contentRef = useRef<HTMLDivElement>(null);
   
   const handleMenuClick = (path: string) => {
+    // Actualizar el título de la página
+    setCurrentPageTitle(pageTitles[path] || '');
+
     if ((path === '/dashboard' && activeContent === 'dashboard') || 
         (path === '/' && activeContent === 'main')) {
       return; // No animar si ya estamos en la misma página
@@ -45,7 +62,7 @@ const Mainpage: React.FC = () => {
   };
   
   return (
-    <Layout onMenuClick={handleMenuClick}>
+    <Layout onMenuClick={handleMenuClick} pageTitle={currentPageTitle}>
       <div 
         ref={contentRef}
         className="content-container"

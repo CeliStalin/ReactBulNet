@@ -1,22 +1,31 @@
 import React from 'react';
 import UserLoginApp from '../../UserLogin/UserLoginApp';
-import { headerStyles } from '../../MainPage/styles/header.styles';
+import { headerStyles } from '../styles/header.styles';
 
 interface HeaderProps {
   logoUrl: string;
   altText: string;
+  pageTitle?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ logoUrl, altText }) => {
+export const Header: React.FC<HeaderProps> = ({ logoUrl, altText, pageTitle }) => {
   return (
-    <header style={headerStyles}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+    <header style={headerStyles.container}>
+      <div style={headerStyles.logoContainer}>
         <img
           src={logoUrl}
           alt={altText}
           className="image"
-          style={{ height: '50px', width: 'auto', marginLeft: '1rem' }}
+          style={headerStyles.logo}
         />
+        {pageTitle && (
+          <>
+            <span style={headerStyles.separator}>|</span>
+            <span style={headerStyles.pageTitle}>
+              {pageTitle}
+            </span>
+          </>
+        )}
       </div>
       <UserLoginApp />
     </header>
