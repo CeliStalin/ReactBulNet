@@ -12,6 +12,7 @@ import { LoadingDots } from './components/Login/components/LoadingDots';
 import { useAuthContext } from './context/AuthContext';
 import IngresoHerederos from './components/IngresoHerederos/IngresoHerederos';
 import IngresoDocumentos from './components/IngresoDocumentos/IngresoDocumentos';
+import DashboardPage from './components/Dashboard/DashboardPage';
 
 const App: React.FC = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false);
@@ -89,6 +90,16 @@ const App: React.FC = () => {
             />
             
             <Route 
+              path="/dashboard" 
+              element={
+                <RoleProtectedRoute 
+                  element={<DashboardPage />} 
+                  allowedRoles={["USER", "ADMIN", "Developers"]} 
+                />
+              } 
+            />
+            
+            <Route 
               path="/MnHerederos/ingresoHer" 
               element={
                 <RoleProtectedRoute 
@@ -108,11 +119,35 @@ const App: React.FC = () => {
               } 
             />
             
+            {/* Ruta dinámica para otras aplicaciones */}
+            <Route 
+              path="/:controlador/:id" 
+              element={
+                <RoleProtectedRoute 
+                  element={<GenericApplicationPage />} 
+                  allowedRoles={["USER", "ADMIN", "Developers"]} 
+                />
+              } 
+            />
+            
             <Route path="*" element={<Navigate to="/404" />} />
           </Routes>
         </main>
       </div>
     </Router>
+  );
+};
+
+// Componente genérico para mostrar aplicaciones
+const GenericApplicationPage: React.FC = () => {
+  const { pathname } = window.location;
+  
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Aplicación</h1>
+      <p>Ruta actual: {pathname}</p>
+      <p>Esta página se renderizará según el controlador y ID de la aplicación.</p>
+    </div>
   );
 };
 

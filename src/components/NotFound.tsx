@@ -10,7 +10,7 @@ const NotFound: React.FC = () => {
       <h2>404 - Página no encontrada</h2>
       <p>Lo sentimos, la página que estás buscando no existe o no tienes acceso.</p>
       
-      {isSignedIn && (
+      {!isSignedIn && (
         <div style={{ marginTop: '20px' }}>
           <p>Parece que no has iniciado sesión.</p>
           <button 

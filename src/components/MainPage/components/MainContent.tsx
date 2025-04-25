@@ -7,7 +7,12 @@ interface MainContentProps {
 export const MainContent: React.FC<MainContentProps> = () => {
   return (
     <div className="content">
-      {/* El contenido principal está vacío */}
+      <h1 className="title">Bienvenido a Consalud</h1>
+      <p className="subtitle">Sistema de Administración de Herederos</p>
+      
+      <div className="box">
+        <p>Seleccione una opción del menú para comenzar.</p>
+      </div>
     </div>
   );
 };

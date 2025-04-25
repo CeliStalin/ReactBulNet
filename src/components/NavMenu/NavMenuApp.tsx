@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ApiGetMenus } from "../../services/GetApiArq";
 import { ElementMenu } from "../../interfaces/IMenusElementos";
 import useAuth from "../../hooks/useAuth";
@@ -8,17 +9,16 @@ import { MenuSection } from './components/MenuSection';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
-  onMenuItemClick?: (path: string, title?: string) => void;
 }
 
-const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) => {
+const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const { roles } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [currentPath, setCurrentPath] = useState<string>('/');
 
-  // Usamos useMemo para evitar que userRoles se recree en cada render
   const userRoles = useMemo(() => roles.map(role => role.Rol), [roles]);
   const isAdmin = userRoles.includes("ADMIN");
 
@@ -37,7 +37,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
           new Map(allMenus.map(item => [item.Id, item])).values()
         );
 
-        console.log('Menús cargados:', uniqueMenus); // Debug
+        console.log('Menús cargados:', uniqueMenus);
         setMenuItems(uniqueMenus);
       } catch (error) {
         console.error("Error al cargar menús:", error);
@@ -48,7 +48,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
     };
 
     fetchMenu();
-  }, [userRoles.join(',')]); // Cambiamos la dependencia para que solo se ejecute cuando cambie el contenido de userRoles
+  }, [userRoles]);
 
   const handleToggle = () => {
     const newState = !isCollapsed;
@@ -56,22 +56,13 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
     onToggle?.(newState);
   };
 
-  const handleMenuClick = (itemId: number | string, path: string, title?: string) => {
-    console.log('NavMenuApp - handleMenuClick:', { itemId, path, title }); // Debug
-    
-    // Establecer el path actual
-    setCurrentPath(`${path}_${itemId}`);
-    
-    // Navegar según el tipo de menú
-    if (title === "Ingreso Herederos" || title?.includes("Herederos")) {
-      console.log('Navegando a Ingreso Herederos');
-      onMenuItemClick?.("/MnHerederos/ingresoHer", title);
-    } else if (title === "Ingreso Documentos" || title?.includes("Documentos")) {
-      console.log('Navegando a Ingreso Documentos');
-      onMenuItemClick?.("/MnHerederos/ingresoDoc", title);
-    } else {
-      onMenuItemClick?.(path, title);
-    }
+  const handleMenuClick = (path: string, title?: string) => {
+    console.log('NavMenuApp - handleMenuClick:', { path, title });
+    navigate(path);
+  };
+
+  const isPathActive = (path: string): boolean => {
+    return location.pathname === path;
   };
 
   if (loading) return <p>Cargando menú...</p>;
@@ -118,14 +109,14 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
                       Inicio
                     </span>
                   }
-                  onClick={() => handleMenuClick('inicio', '/', "Inicio")} 
-                  currentPath={currentPath} 
+                  onClick={() => handleMenuClick('/', "Inicio")} 
+                  isActive={isPathActive('/')}
                 />
                 <MenuItem 
                   to="/profile" 
                   label="Mi Perfil" 
-                  onClick={() => handleMenuClick('profile', '/profile', "Mi Perfil")} 
-                  currentPath={currentPath} 
+                  onClick={() => handleMenuClick('/profile', "Mi Perfil")} 
+                  isActive={isPathActive('/profile')}
                 />
               </MenuSection>
 
@@ -134,14 +125,14 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
                   <MenuItem 
                     to="/admin" 
                     label="Panel de Admin" 
-                    onClick={() => handleMenuClick('admin', '/admin', "Panel de Administración")} 
-                    currentPath={currentPath} 
+                    onClick={() => handleMenuClick('/admin', "Panel de Administración")} 
+                    isActive={isPathActive('/admin')}
                   />
                   <MenuItem 
                     to="/dashboard" 
                     label="Dashboard" 
-                    onClick={() => handleMenuClick('dashboard', '/dashboard', "Dashboard")} 
-                    currentPath={currentPath} 
+                    onClick={() => handleMenuClick('/dashboard', "Dashboard")} 
+                    isActive={isPathActive('/dashboard')}
                   />
                 </MenuSection>
               )}
@@ -149,15 +140,26 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle, onMenuItemClick }) =>
               {menuItems.length > 0 && (
                 <MenuSection title="Aplicaciones">
                   {menuItems.map((item) => {
-                    const uniqueKey = `${item.Id}_${item.Nombre}`;
+                    let navigatePath = '';
+                    
+                    // Determinar la ruta correcta basada en el título
+                    if (item.Descripcion?.toLowerCase().includes("herederos") && 
+                        item.Descripcion?.toLowerCase().includes("ingreso")) {
+                      navigatePath = "/MnHerederos/ingresoHer";
+                    } else if (item.Descripcion?.toLowerCase().includes("documentos") && 
+                               item.Descripcion?.toLowerCase().includes("ingreso")) {
+                      navigatePath = "/MnHerederos/ingresoDoc";
+                    } else {
+                      navigatePath = `/${item.Controlador}/${item.Id}`;
+                    }
                     
                     return (
                       <MenuItem 
-                        key={uniqueKey} 
-                        to={`${item.Controlador}_${item.Id}`} 
+                        key={item.Id} 
+                        to={navigatePath} 
                         label={item.Descripcion}
-                        onClick={() => handleMenuClick(item.Id, item.Controlador, item.Descripcion)}
-                        currentPath={currentPath}
+                        onClick={() => handleMenuClick(navigatePath, item.Descripcion)}
+                        isActive={isPathActive(navigatePath)}
                       />
                     );
                   })}

@@ -5,12 +5,10 @@ interface MenuItemProps {
   to: string;
   label: string | React.ReactNode;
   onClick?: (path: string) => void;
-  currentPath?: string;
+  isActive?: boolean;
 }
 
-export const MenuItem: React.FC<MenuItemProps> = ({ to, label, onClick, currentPath }) => {
-  const isActive = currentPath === to;
-  
+export const MenuItem: React.FC<MenuItemProps> = ({ to, label, onClick, isActive }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     onClick?.(to);

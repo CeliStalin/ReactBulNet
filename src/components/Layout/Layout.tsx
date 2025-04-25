@@ -1,40 +1,46 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import NavMenuApp from '../NavMenu/NavMenuApp';
 import logoIcon from '../../assets/Logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
-  onMenuClick?: (path: string, title?: string) => void;
   pageTitle?: string;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onMenuClick, pageTitle }) => {
+// Mapa de rutas a títulos de página
+const pageTitles: { [key: string]: string } = {
+  '/': 'Inicio',
+  '/dashboard': 'Dashboard',
+  '/profile': 'Mi Perfil',
+  '/admin': 'Panel de Administración',
+  '/MnHerederos/ingresoHer': 'Ingreso Herederos',
+  '/MnHerederos/ingresoDoc': 'Ingreso Documentos'
+};
+
+export const Layout: React.FC<LayoutProps> = ({ children, pageTitle }) => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState<boolean>(false);
+  const location = useLocation();
   
   const handleMenuToggle = (collapsed: boolean) => {
     setIsMenuCollapsed(collapsed);
   };
   
-  const handleMenuItemClick = (path: string, title?: string) => {
-    console.log('Layout - Menu item clicked:', path, title); // Debug
-    if (onMenuClick) {
-      onMenuClick(path, title);
-    }
-  };
+  // Determinar el título basado en la ubicación actual si no se proporciona uno
+  const currentPageTitle = pageTitle || pageTitles[location.pathname] || '';
   
   return (
     <div className="layout">
       <Header 
         logoUrl={logoIcon}
         altText="Consalud Logo"
-        pageTitle={pageTitle}
+        pageTitle={currentPageTitle}
       />
       
       <div className="layout-body" style={{ paddingTop: "4rem", display: "flex" }}>
         <NavMenuApp 
           onToggle={handleMenuToggle}
-          onMenuItemClick={handleMenuItemClick}
         />
         
         <main style={{ 
