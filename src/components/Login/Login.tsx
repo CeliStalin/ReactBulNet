@@ -1,5 +1,5 @@
-// src/components/Login/Login.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { Header } from './components/Header';
 import { UserInfo } from './components/UserInfo';
@@ -9,7 +9,15 @@ import * as styles from './Login.styles';
 import { theme } from '../styles/theme';
 import logoIcon from '../../assets/Logo.png';
 
+interface LocationState {
+  from?: {
+    pathname: string;
+  };
+}
+
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { 
     isSignedIn, 
     usuario, 
@@ -20,86 +28,36 @@ const Login: React.FC = () => {
     errorAD, 
     errorRoles, 
     login, 
-    logout
+    logout,
+    isInitializing
   } = useAuth();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isSignedIn && !isInitializing && !loading) {
+      const state = location.state as LocationState;
+      const from = state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [isSignedIn, isInitializing, loading, navigate, location]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
     try {
       await login();
-      // La navegación será manejada por el componente App
+      // La navegación se maneja en useEffect
     } catch (error) {
       console.error('Error during login:', error);
       setIsLoggingIn(false);
     }
   };
 
-  const renderAuthButton = () => {
-    if (loading || isLoggingIn) {
-      return (
-        <div className="field" style={{ width: '100%' }}>
-          <div className="control">
-            <button 
-              className="button is-fullwidth"
-              style={{
-                ...styles.primaryButton,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '48px'
-              }}
-              disabled={true}
-            >
-              <LoadingDots size="small" />
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    if (!isSignedIn) {
-      return (
-        <div className="field" style={{ width: '100%' }}>
-          <div className="control">
-            <button 
-              className="button is-fullwidth"
-              style={styles.primaryButton}
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-            >
-              Iniciar sesión con Azure AD
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        <UserInfo usuario={usuario} usuarioAD={usuarioAD} roles={roles} />
-        
-        <div className="field" style={{ width: '100%', marginTop: '24px' }}>
-          <div className="control">
-            <button 
-              className="button is-fullwidth"
-              style={styles.primaryButton}
-              onClick={logout}
-              disabled={loading}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </>
-    );
-  };
-
   return (
     <>
       <Header 
-       logoUrl= {logoIcon}
+       logoUrl={logoIcon}
         altText="Consalud Logo"
       />
 
@@ -109,14 +67,62 @@ const Login: React.FC = () => {
             <div className="columns is-centered">
               <div className="column is-narrow">
                 <div className="box has-text-centered" style={styles.loginBox}>
-                <h1 className="title has-text-centered" style={styles.titleStyles}>
-              <span style={{ color: theme.colors.black }}>Ingresa al </span>
-              <span style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
-                administrador de devolución a herederos
-              </span>
-            </h1>
+                  <h1 className="title has-text-centered" style={styles.titleStyles}>
+                    <span style={{ color: theme.colors.black }}>Ingresa al </span>
+                    <span style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
+                      administrador de devolución a herederos
+                    </span>
+                  </h1>
                   
-                  {renderAuthButton()}
+                  {loading || isLoggingIn ? (
+                    <div className="field" style={{ width: '100%' }}>
+                      <div className="control">
+                        <button 
+                          className="button is-fullwidth"
+                          style={{
+                            ...styles.primaryButton,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: '48px'
+                          }}
+                          disabled={true}
+                        >
+                          <LoadingDots size="small" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : !isSignedIn ? (
+                    <div className="field" style={{ width: '100%' }}>
+                      <div className="control">
+                        <button 
+                          className="button is-fullwidth"
+                          style={styles.primaryButton}
+                          onClick={handleLogin}
+                          disabled={isLoggingIn}
+                        >
+                          Iniciar sesión con Azure AD
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <UserInfo usuario={usuario} usuarioAD={usuarioAD} roles={roles} />
+                      
+                      <div className="field" style={{ width: '100%', marginTop: '24px' }}>
+                        <div className="control">
+                          <button 
+                            className="button is-fullwidth"
+                            style={styles.primaryButton}
+                            onClick={logout}
+                            disabled={loading}
+                          >
+                            Cerrar sesión
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   
                   <ErrorMessages 
                     error={error}

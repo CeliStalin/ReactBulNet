@@ -1,9 +1,9 @@
 import React from 'react';
-import { Layout } from '../Layout/Layout';
+import SecureLayout from '../SecureLayout/SecureLayout';
 
 const IngresoDocumentos: React.FC = () => {
   return (
-    <Layout pageTitle="Ingreso Documentos">
+    <SecureLayout pageTitle="Ingreso Documentos">
       <div style={{ padding: '20px' }}>
         <div className="columns is-centered">
           <div className="column is-narrow">
@@ -14,7 +14,7 @@ const IngresoDocumentos: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </SecureLayout>
   );
 };
 

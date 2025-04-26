@@ -71,14 +71,17 @@ const App: React.FC = () => {
       <div className="App">
         <main>
           <Routes>
+            {/* Ruta de login - accesible sin autenticación */}
             <Route 
               path="/login" 
               element={isSignedIn ? <Navigate to="/" replace /> : <Login />} 
             />
             
+            {/* Rutas públicas */}
             <Route path="/404" element={<NotFound />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
+            {/* Rutas protegidas */}
             <Route 
               path="/" 
               element={
@@ -94,7 +97,7 @@ const App: React.FC = () => {
               element={
                 <RoleProtectedRoute 
                   element={<DashboardPage />} 
-                  allowedRoles={["USER", "ADMIN", "Developers"]} 
+                  allowedRoles={["ADMIN", "Developers"]} 
                 />
               } 
             />
@@ -119,35 +122,12 @@ const App: React.FC = () => {
               } 
             />
             
-            {/* Ruta dinámica para otras aplicaciones */}
-            <Route 
-              path="/:controlador/:id" 
-              element={
-                <RoleProtectedRoute 
-                  element={<GenericApplicationPage />} 
-                  allowedRoles={["USER", "ADMIN", "Developers"]} 
-                />
-              } 
-            />
-            
-            <Route path="*" element={<Navigate to="/404" />} />
+            {/* Redirección para rutas no encontradas */}
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </main>
       </div>
     </Router>
-  );
-};
-
-// Componente genérico para mostrar aplicaciones
-const GenericApplicationPage: React.FC = () => {
-  const { pathname } = window.location;
-  
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1>Aplicación</h1>
-      <p>Ruta actual: {pathname}</p>
-      <p>Esta página se renderizará según el controlador y ID de la aplicación.</p>
-    </div>
   );
 };
 

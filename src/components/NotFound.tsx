@@ -1,9 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
 const NotFound: React.FC = () => {
-  const { login, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
   
   return (
     <div style={{ textAlign: 'center', padding: '50px 20px' }}>
@@ -12,16 +17,17 @@ const NotFound: React.FC = () => {
       
       {!isSignedIn && (
         <div style={{ marginTop: '20px' }}>
-          <p>Parece que no has iniciado sesión.</p>
+          <p>Si necesitas acceder al sistema, por favor inicia sesión.</p>
           <button 
-            onClick={login}
+            onClick={handleLoginClick}
             style={{
               backgroundColor: '#00cbbf',
               color: 'white',
               padding: '8px 16px',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              marginTop: '10px'
             }}
           >
             Iniciar sesión con Azure AD
@@ -30,16 +36,19 @@ const NotFound: React.FC = () => {
       )}
       
       <div style={{ marginTop: '20px' }}>
-        <Link 
-          to="/" 
+        <button 
+          onClick={() => navigate('/')}
           style={{
+            backgroundColor: 'transparent',
             color: '#00cbbf',
-            textDecoration: 'none',
-            fontWeight: 'bold'
+            padding: '8px 16px',
+            border: '1px solid #00cbbf',
+            borderRadius: '4px',
+            cursor: 'pointer'
           }}
         >
           Volver a la página principal
-        </Link>
+        </button>
       </div>
     </div>
   );
