@@ -1,56 +1,67 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { Layout } from '../Layout/Layout';
 import { LoadingDots } from '../Login/components/LoadingDots';
 
-interface SecureLayoutProps {
+interface AuthGuardProps {
   children: React.ReactNode;
-  pageTitle?: string;
   allowedRoles?: string[];
+  redirectPath?: string;
 }
 
-const SecureLayout: React.FC<SecureLayoutProps> = ({ 
+const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
-  pageTitle, 
-  allowedRoles = ['USER', 'ADMIN', 'Developers'] 
+  allowedRoles = [], 
+  redirectPath = '/login' 
 }) => {
   const { 
     isSignedIn, 
     roles, 
     isInitializing, 
     loading,
-    isLoggingOut
+    isLoggingOut 
   } = useAuth();
   
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Si no está autenticado y no está inicializando, redirigir a login
-    if (!isSignedIn && !isInitializing && !loading && !isLoggingOut) {
-      navigate('/login', { 
+    if (isInitializing || loading || isLoggingOut) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      // Guardar la ubicación actual para redirigir después del login
+      navigate(redirectPath, { 
         replace: true, 
         state: { from: location } 
       });
       return;
     }
 
-    // Si está autenticado, verificar roles
-    if (isSignedIn && !isInitializing && !loading) {
+    if (allowedRoles.length > 0) {
       const userRoles = roles.map(role => role.Rol);
       const hasPermission = allowedRoles.some(role => userRoles.includes(role));
       
       if (!hasPermission) {
         navigate('/unauthorized', { 
-          replace: true,
+          replace: true, 
           state: { from: location } 
         });
       }
     }
-  }, [isSignedIn, roles, isInitializing, loading, isLoggingOut, allowedRoles, navigate, location]);
+  }, [
+    isSignedIn, 
+    roles, 
+    isInitializing, 
+    loading, 
+    isLoggingOut, 
+    navigate, 
+    location, 
+    allowedRoles, 
+    redirectPath
+  ]);
 
-  // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing || loading) {
     return (
       <div style={{
@@ -63,13 +74,12 @@ const SecureLayout: React.FC<SecureLayoutProps> = ({
       }}>
         <LoadingDots size="medium" color="rgb(4, 165, 155)" />
         <div style={{ color: '#333', fontSize: '16px' }}>
-          Cargando...
+          Verificando acceso...
         </div>
       </div>
     );
   }
 
-  // Si está cerrando sesión, mostrar pantalla específica
   if (isLoggingOut) {
     return (
       <div style={{
@@ -89,24 +99,11 @@ const SecureLayout: React.FC<SecureLayoutProps> = ({
     );
   }
 
-  // Si no está autenticado, no renderizar nada (la redirección se maneja en useEffect)
   if (!isSignedIn) {
     return null;
   }
 
-  // Verificar roles antes de renderizar
-  const userRoles = roles.map(role => role.Rol);
-  const hasPermission = allowedRoles.some(role => userRoles.includes(role));
-  
-  if (!hasPermission) {
-    return null; // La redirección se maneja en useEffect
-  }
-
-  return (
-    <Layout pageTitle={pageTitle}>
-      {children}
-    </Layout>
-  );
+  return <>{children}</>;
 };
 
-export default SecureLayout;
+export default AuthGuard;

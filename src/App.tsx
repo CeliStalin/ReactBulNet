@@ -6,13 +6,85 @@ import { NotFound } from './components/NotFound';
 import { initializeAuthProvider } from './auth/authProvider';
 import useAuth from './hooks/useAuth';
 import { Mainpage } from './components/MainPage/MainPage';
-import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import { LoadingDots } from './components/Login/components/LoadingDots';
 import { useAuthContext } from './context/AuthContext';
 import IngresoHerederos from './components/IngresoHerederos/IngresoHerederos';
 import IngresoDocumentos from './components/IngresoDocumentos/IngresoDocumentos';
 import DashboardPage from './components/Dashboard/DashboardPage';
+
+// Componente de ruta pública
+const PublicRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
+  const { isSignedIn, isInitializing } = useAuth();
+  
+  if (isInitializing) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <LoadingDots size="large" color="rgb(4, 165, 155)" />
+        <div style={{ color: '#333', fontSize: '16px' }}>
+          Cargando...
+        </div>
+      </div>
+    );
+  }
+  
+  // Si ya está autenticado, redirigir a la página principal
+  if (isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{element}</>;
+};
+
+// Componente de ruta privada con verificación de autenticación
+const PrivateRoute: React.FC<{ element: React.ReactNode; allowedRoles?: string[] }> = ({ 
+  element, 
+  allowedRoles = ["USER", "ADMIN", "Developers"] 
+}) => {
+  const { isSignedIn, isInitializing, roles } = useAuth();
+  
+  if (isInitializing) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <LoadingDots size="large" color="rgb(4, 165, 155)" />
+        <div style={{ color: '#333', fontSize: '16px' }}>
+          Verificando acceso...
+        </div>
+      </div>
+    );
+  }
+  
+  // Si no está autenticado, redirigir a login
+  if (!isSignedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Verificar roles si se especifican
+  if (allowedRoles.length > 0) {
+    const userRoles = roles.map(role => role.Rol);
+    const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+    
+    if (!hasPermission) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+  
+  return <>{element}</>;
+};
 
 const App: React.FC = () => {
   const [isAppInitialized, setIsAppInitialized] = useState(false);
@@ -71,21 +143,21 @@ const App: React.FC = () => {
       <div className="App">
         <main>
           <Routes>
-            {/* Ruta de login - accesible sin autenticación */}
+            {/* Ruta de login - accesible solo si NO está autenticado */}
             <Route 
               path="/login" 
-              element={isSignedIn ? <Navigate to="/" replace /> : <Login />} 
+              element={<PublicRoute element={<Login />} />} 
             />
             
-            {/* Rutas públicas */}
+            {/* Rutas públicas - accesibles sin autenticación */}
             <Route path="/404" element={<NotFound />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Rutas protegidas */}
+            {/* Rutas protegidas - requieren autenticación */}
             <Route 
               path="/" 
               element={
-                <RoleProtectedRoute 
+                <PrivateRoute 
                   element={<Mainpage />} 
                   allowedRoles={["USER", "ADMIN", "Developers"]} 
                 />
@@ -95,7 +167,7 @@ const App: React.FC = () => {
             <Route 
               path="/dashboard" 
               element={
-                <RoleProtectedRoute 
+                <PrivateRoute 
                   element={<DashboardPage />} 
                   allowedRoles={["ADMIN", "Developers"]} 
                 />
@@ -105,7 +177,7 @@ const App: React.FC = () => {
             <Route 
               path="/MnHerederos/ingresoHer" 
               element={
-                <RoleProtectedRoute 
+                <PrivateRoute 
                   element={<IngresoHerederos />} 
                   allowedRoles={["USER", "ADMIN", "Developers"]} 
                 />
@@ -115,15 +187,22 @@ const App: React.FC = () => {
             <Route 
               path="/MnHerederos/ingresoDoc" 
               element={
-                <RoleProtectedRoute 
+                <PrivateRoute 
                   element={<IngresoDocumentos />} 
                   allowedRoles={["USER", "ADMIN", "Developers"]} 
                 />
               } 
             />
             
-            {/* Redirección para rutas no encontradas */}
-            <Route path="*" element={<Navigate to="/404" replace />} />
+            {/* Para cualquier otra ruta, si está autenticado ir a 404, si no a login */}
+            <Route 
+              path="*" 
+              element={
+                isSignedIn ? 
+                  <Navigate to="/404" replace /> : 
+                  <Navigate to="/login" replace />
+              } 
+            />
           </Routes>
         </main>
       </div>

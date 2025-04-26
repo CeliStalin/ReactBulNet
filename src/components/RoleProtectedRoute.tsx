@@ -1,6 +1,3 @@
-
-// 1. Mejorar el componente RoleProtectedRoute
-// src/components/RoleProtectedRoute.tsx
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
@@ -100,9 +97,9 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
     );
   }
 
-  // Redirección inmediata si no está autenticado
+  // Redirección inmediata a login si no está autenticado
   if (!isSignedIn) {
-    return <Navigate to="/404" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Verificación de roles
