@@ -66,18 +66,22 @@ const UserLoginApp: React.FC = () => {
     }
   };
 
-  // Obtener nombre y apellido de displayName
-  const getNameAndSurname = () => {
+   // Obtener nombre y apellido de displayName
+   const getNameAndSurname = () => {
     if (effectiveUserData?.displayName) {
       const parts = effectiveUserData.displayName.split(' ');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
+        // Si tiene 3 o más partes, tomamos el primer nombre y el tercer elemento (primer apellido)
+        return `${parts[0]} ${parts[2]}`;
+      } else if (parts.length >= 2) {
+        // Si tiene exactamente 2 partes, las mostramos tal cual
         return `${parts[0]} ${parts[1]}`;
       }
       return effectiveUserData.displayName;
     }
     return '';
   };
-
+  
   return (
     <div
       className="identify"
