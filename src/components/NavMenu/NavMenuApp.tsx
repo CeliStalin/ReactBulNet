@@ -22,6 +22,21 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const userRoles = useMemo(() => roles.map(role => role.Rol), [roles]);
   const isAdmin = userRoles.includes("ADMIN");
 
+  // Detectar cambios de ruta y colapsar automáticamente
+  useEffect(() => {
+    const shouldAutoCollapse = () => {
+      // Solo colapsar automáticamente si el menú está expandido
+      if (!isCollapsed) {
+        const newState = true;
+        setIsCollapsed(newState);
+        onToggle?.(newState);
+      }
+    };
+
+    // Colapsar cuando cambia la ubicación
+    shouldAutoCollapse();
+  }, [location.pathname]); // Dependencia al pathname para detectar cambios de ruta
+
   useEffect(() => {
     const fetchMenu = async () => {
       try {
@@ -79,7 +94,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
             style={navMenuStyles.menuLabel}
             onClick={handleToggle}
           >
-            <span style={navMenuStyles.menuIcon()}>
+            <span style={navMenuStyles.menuIcon(isCollapsed)}>
               ☰
             </span>
             {!isCollapsed && <span style={{ marginLeft: '10px' }}>Menú</span>}
