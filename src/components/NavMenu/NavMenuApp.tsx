@@ -6,6 +6,8 @@ import useAuth from "../../hooks/useAuth";
 import { navMenuStyles } from './styles/navMenu.styles';
 import { MenuItem } from './components/MenuItem';
 import { MenuSection } from './components/MenuSection';
+import { LoadingDots } from '../Login/components/LoadingDots';
+import { theme } from '../styles/theme';
 
 interface NavMenuAppProps {
   onToggle?: (collapsed: boolean) => void;
@@ -80,7 +82,42 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     return location.pathname === path;
   };
 
-  if (loading) return <p>Cargando menú...</p>;
+  if (loading) {
+    return (
+      <div 
+        className="columns is-gapless"
+        style={{
+          width: '220px',
+          position: 'fixed',
+          left: 0,
+          top: '4rem',
+          height: 'calc(100vh - 4rem)',
+          backgroundColor: '#f5f5f5',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '2px 0 5px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div 
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px'
+          }}
+        >
+          <LoadingDots size="small" color={theme.colors.primary} />
+          <span style={{ 
+            color: theme.colors.gray.dark, 
+            fontSize: theme.typography.fontSize.sm 
+          }}>
+            Cargando menú...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="columns is-gapless">
