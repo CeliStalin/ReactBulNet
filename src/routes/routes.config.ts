@@ -2,13 +2,13 @@ import { lazy } from 'react';
 import { RouteConfig } from './types';
 
 // Lazy loading de componentes
-const Login = lazy(() => import('@/components/features/auth/Login/LoginContainer'));
-const MainPage = lazy(() => import('@/components/features/MainPage/MainPage'));
-const Dashboard = lazy(() => import('@/components/features/dashboard/Dashboard'));
-const IngresoHerederos = lazy(() => import('@/components/features/herederos/IngresoHerederos'));
-const IngresoDocumentos = lazy(() => import('@/components/features/herederos/IngresoDocumentos'));
-const NotFound = lazy(() => import('@/components/features/NotFound'));
-const Unauthorized = lazy(() => import('@/components/features/Unauthorized'));
+const Login = lazy(() => import('../components/Login/Login')); 
+const MainPage = lazy(() => import('../components/MainPage')); 
+const Dashboard = lazy(() => import('../components/Dashboard/DashboardPage')); 
+const IngresoHerederos = lazy(() => import('../components/IngresoHerederos/IngresoHerederos'));
+const IngresoDocumentos = lazy(() => import('../components/IngresoDocumentos/IngresoDocumentos'));
+const NotFound = lazy(() => import('../components/NotFound'));
+const Unauthorized = lazy(() => import('../components/Unauthorized'));
 
 export const routes: RouteConfig[] = [
   // Rutas públicas
