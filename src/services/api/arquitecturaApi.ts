@@ -6,7 +6,7 @@ import {
   mapRawArrayToRolResponseArray, 
   mapRawToUsuarioAd, 
   mapRawArrayToElementMenuArray 
-} from '@/utils/mappers';
+} from '@/Utils/mappers';
 
 export class ArquitecturaApi {
   private static readonly BASE_PATH = '';
