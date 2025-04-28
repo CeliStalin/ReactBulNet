@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import useLocalStorage from '@/hooks/useLocalStorage'; // Cambiado de { useLocalStorage }
 
 interface UseLayoutReturn {
   isCollapsed: boolean;
@@ -8,11 +8,13 @@ interface UseLayoutReturn {
 }
 
 export const useLayout = (): UseLayoutReturn => {
-  const [isCollapsed, setIsCollapsed] = useLocalStorage('sidebar-collapsed', false);
+  // Especificamos el tipo para evitar el tipo 'any' implícito
+  const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>('sidebar-collapsed', false);
   const [isMobile, setIsMobile] = useState(false);
 
   const toggleSidebar = useCallback(() => {
-    setIsCollapsed(prev => !prev);
+    // Añadimos tipo explícito para 'prev'
+    setIsCollapsed((prev: boolean) => !prev);
   }, [setIsCollapsed]);
 
   useEffect(() => {

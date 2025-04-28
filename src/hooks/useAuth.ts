@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { AuthProvider } from '@/services/auth/authProvider';
-import { getMe, getUsuarioAD, getRoles } from '@/services/auth/authService';
-import { useLocalStorage } from './useLocalStorage';
-import { IUser } from '@/types/interfaces/IUserAz';
-import { RolResponse } from '@/types/interfaces/IRol';
-import { UsuarioAd } from '@/types/interfaces/IUsuarioAD';
-import { useAuthContext } from '@/context/AuthContext';
+import { AuthProvider } from '../services/auth/authProvider';
+import { getMe, getUsuarioAD, getRoles } from '../services/auth/authService';
+import useLocalStorage from './useLocalStorage';
+import { IUser } from '../interfaces/IUserAz';
+import { RolResponse } from '../interfaces/IRol';
+import { UsuarioAd } from '../interfaces/IUsuarioAD';
+import { useAuthContext } from '../context/AuthContext';
 
 interface AuthState {
   isSignedIn: boolean;

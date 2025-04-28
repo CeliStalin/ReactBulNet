@@ -12,8 +12,8 @@
     "start": "vite"
   },
   "dependencies": {
-    "@microsoft/mgt-element": "^4.5.0",
-    "@microsoft/mgt-msal2-provider": "^4.5.0",
+    "@microsoft/mgt-element": "^4.6.0",
+    "@microsoft/mgt-msal2-provider": "^4.6.0",
     "bulma": "^1.0.3",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",

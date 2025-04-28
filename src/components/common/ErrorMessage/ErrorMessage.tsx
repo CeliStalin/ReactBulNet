@@ -66,3 +66,5 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     </div>
   );
 };
+
+export default ErrorMessage;

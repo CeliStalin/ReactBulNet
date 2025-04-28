@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Card } from '../Card/Card';
 import { Button } from '../Button/Button';
 import { logger } from '@/services/logging/logger';
@@ -23,8 +23,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('Error boundary caught an error:', error, {
-      componentStack: errorInfo.componentStack,
+    // Modificamos esta línea para usar solo 2 argumentos
+    logger.error('Error boundary caught an error:', { 
+      error, 
+      componentStack: errorInfo.componentStack 
     });
   }
 
