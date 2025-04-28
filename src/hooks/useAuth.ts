@@ -1,13 +1,11 @@
-// src/hooks/useAuth.ts
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Providers } from '@microsoft/mgt-element';
-import { login as azureLogin, logout as azureLogout, isAuthenticated } from '../auth/authProvider';
-import { getMe, getUsuarioAD, getRoles } from '../auth/authService';
-import useLocalStorage from './useLocalStorage';
-import { IUser } from '../interfaces/IUserAz';
-import { RolResponse } from '../interfaces/IRol';
-import { UsuarioAd } from '../interfaces/IUsuarioAD';
-import { useAuthContext } from '../context/AuthContext';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { AuthProvider } from '@/services/auth/authProvider';
+import { getMe, getUsuarioAD, getRoles } from '@/services/auth/authService';
+import { useLocalStorage } from './useLocalStorage';
+import { IUser } from '@/types/interfaces/IUserAz';
+import { RolResponse } from '@/types/interfaces/IRol';
+import { UsuarioAd } from '@/types/interfaces/IUsuarioAD';
+import { useAuthContext } from '@/context/AuthContext';
 
 interface AuthState {
   isSignedIn: boolean;
@@ -15,109 +13,68 @@ interface AuthState {
   usuarioAD: UsuarioAd | null;
   roles: RolResponse[];
   loading: boolean;
-  error: string;
-  errorAD: string;
-  errorRoles: string;
-  authAttempts: number;
-  maxAuthAttempts: number;
+  error: string | null;
+  errorAD: string | null;
+  errorRoles: string | null;
+}
+
+interface UseAuthReturn extends AuthState {
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuthentication: () => boolean;
+  loadUserData: () => Promise<void>;
+  hasRole: (roleName: string) => boolean;
+  hasAnyRole: (allowedRoles: string[]) => boolean;
   isInitializing: boolean;
   isLoggingOut: boolean;
 }
 
-// Mock roles para desarrollo
-const MOCK_ROLES: RolResponse[] = [
-  {
-    IdUsuario: 1,
-    CodApp: "CONSALUD",
-    Rol: "ADMIN",
-    TipoRol: "NORMAL",
-    InicioVigencia: new Date(),
-    EstadoReg: "A",
-    FecEstadoReg: new Date(),
-    UsuarioCreacion: "SISTEMA",
-    FechaCreacion: new Date(),
-    FuncionCreacion: "TEST",
-    UsuarioModificacion: "SISTEMA",
-    FechaModificacion: new Date(),
-    FuncionModificacion: "TEST"
-  }
-];
-
-export const useAuth = () => {
+export const useAuth = (): UseAuthReturn => {
   const { isLoggingOut, setIsLoggingOut } = useAuthContext();
   
   // Estado local con localStorage
   const [isSignedIn, setIsSignedIn] = useLocalStorage<boolean>('isLogin', false);
   const [usuario, setUsuario] = useLocalStorage<IUser | null>('usuario', null);
   const [usuarioAD, setUsuarioAD] = useLocalStorage<UsuarioAd | null>('usuarioAD', null);
-  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', []); //MOCK_ROLES
+  const [roles, setRoles] = useLocalStorage<RolResponse[]>('roles', []);
   
   // Estado local sin persistencia
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [errorAD, setErrorAD] = useState<string>('');
-  const [errorRoles, setErrorRoles] = useState<string>('');
-  const [authAttempts, setAuthAttempts] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  const [errorAD, setErrorAD] = useState<string | null>(null);
+  const [errorRoles, setErrorRoles] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
-  const maxAuthAttempts = 1;
+  const cache = useRef(new Map());
 
   // Inicialización y verificación de estado de autenticación
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
-      // Dar tiempo al provider para inicializarse
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      if (!mounted) return;
+      try {
+        // Dar tiempo al provider para inicializarse
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        if (!mounted) return;
 
-      const signedIn = isAuthenticated();
-      
-      // Solo actualizar si hay diferencia
-      if (signedIn !== isSignedIn) {
-        setIsSignedIn(signedIn);
-      }
-
-      // Obtener roles del usuario 
-      //usuario?.mail!
-      getRoles("stalin.celi@consalud.cl", (response) => {
-        if (response.error) {
-          console.error('Error obteniendo roles:', response.error);
-          return;
+        const signedIn = AuthProvider.isAuthenticated();
+        
+        if (signedIn !== isSignedIn) {
+          setIsSignedIn(signedIn);
         }
-        setRoles(response.data);
-      });
-
-      // Si está autenticado y no hay roles, establecer roles mock
-      if (signedIn && (!roles || roles.length === 0)) {
-        setRoles(MOCK_ROLES);
-      }
-
-      if (!isLoggingOut) {
-        setIsInitializing(false);
+      } catch (error) {
+        console.error('Error en inicialización:', error);
+      } finally {
+        if (mounted && !isLoggingOut) {
+          setIsInitializing(false);
+        }
       }
     };
 
     initializeAuth();
 
-    const updateState = () => {
-      if (!mounted) return;
-      
-      const signedIn = isAuthenticated();
-      if (signedIn !== isSignedIn) {
-        setIsSignedIn(signedIn);
-        if (signedIn && (!roles || roles.length === 0)) {
-          setRoles(MOCK_ROLES);
-        }
-        setAuthAttempts(0);
-      }
-    };
-
-    Providers.onProviderUpdated(updateState);
-
     return () => {
       mounted = false;
-      Providers.removeProviderUpdatedListener(updateState);
     };
   }, []);
 
@@ -126,13 +83,13 @@ export const useAuth = () => {
       setUsuario(null);
       setUsuarioAD(null);
       setRoles([]);
-      setError('');
-      setErrorAD('');
-      setErrorRoles('');
+      setError(null);
+      setErrorAD(null);
+      setErrorRoles(null);
       return;
     }
 
-    if (usuario && usuario.id) {
+    if (usuario && usuario.id && cache.current.has(usuario.id)) {
       return;
     }
 
@@ -148,43 +105,39 @@ export const useAuth = () => {
             setUsuario(null);
           }
         } catch (e) {
-          setError('Error al procesar la respuesta: ' + e);
+          setError('Error al procesar la respuesta');
           setUsuario(null);
         }
       } else {
         setUsuario(userData);
+        cache.current.set(userData.id, userData);
         
         if (userData.mail) {
-          if (!usuarioAD) {
-            getUsuarioAD(userData.mail, (res) => {
-              setUsuarioAD(res.data);
-              setErrorAD(res.error);
-            });
+          // Obtener datos de AD
+          try {
+            const adData = await getUsuarioAD(userData.mail);
+            setUsuarioAD(adData);
+            setErrorAD(null);
+          } catch (error) {
+            setErrorAD(error instanceof Error ? error.message : String(error));
           }
 
-          if (roles.length === 0) {
-            getRoles(userData.mail, (res) => {
-              if (res.data && res.data.length > 0) {
-                setRoles(res.data);
-              } else {
-                setRoles(MOCK_ROLES);
-              }
-              setErrorRoles(res.error);
-            });
+          // Obtener roles
+          try {
+            const rolesData = await getRoles(userData.mail);
+            setRoles(rolesData);
+            setErrorRoles(null);
+          } catch (error) {
+            setErrorRoles(error instanceof Error ? error.message : String(error));
           }
-        } else {
-          setRoles(MOCK_ROLES);
         }
       }
-    } catch (err: Error | unknown) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      if (!roles || roles.length === 0) {
-        setRoles(MOCK_ROLES);
-      }
     } finally {
       setLoading(false);
     }
-  }, [isSignedIn, setRoles, setUsuario, setUsuarioAD, usuario, usuarioAD, roles]);
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -193,66 +146,57 @@ export const useAuth = () => {
   }, [isSignedIn, loadUserData]);
 
   const checkAuthentication = useCallback(() => {
-    const authenticated = isAuthenticated();
+    const authenticated = AuthProvider.isAuthenticated();
     if (authenticated !== isSignedIn) {
       setIsSignedIn(authenticated);
     }
-
-    setAuthAttempts(prev => prev + 1);
     return authenticated;
   }, [isSignedIn, setIsSignedIn]);
 
   const login = useCallback(async () => {
     try {
       setLoading(true);
-      await azureLogin();
-      setAuthAttempts(0);
+      setError(null);
+      await AuthProvider.login();
       setIsSignedIn(true);
-      setRoles(MOCK_ROLES);
-    } catch (err: Error | unknown) {
-        setError(err instanceof Error ? err.message : String(err));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      throw err;
     } finally {
       setLoading(false);
     }
-  }, [setIsSignedIn, setRoles]);
+  }, [setIsSignedIn]);
 
   const logout = useCallback(async () => {
-    console.log('[useAuth] Iniciando logout...');
-    // Usar el contexto para actualizar el estado inmediatamente
     setIsLoggingOut(true);
     
     try {
       setLoading(true);
-      await azureLogout();
+      await AuthProvider.logout();
       
       // Limpiar estados
       setUsuario(null);
       setUsuarioAD(null);
       setRoles([]);
-      setAuthAttempts(0);
       setIsSignedIn(false);
+      cache.current.clear();
       
-    } catch (err: Error | unknown) {
-      console.error('[useAuth] Error en logout:', err);
+    } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      throw err;
     } finally {
       setLoading(false);
-      // Mantener isLoggingOut por más tiempo
       setTimeout(() => {
-        console.log('[useAuth] Desactivando isLoggingOut');
         setIsLoggingOut(false);
       }, 2000);
     }
-  }, [setRoles, setUsuario, setUsuarioAD, setIsSignedIn, setIsLoggingOut]);
+  }, [setIsLoggingOut]);
 
   const hasRole = useCallback((roleName: string): boolean => {
     return roles.some(role => role.Rol === roleName);
   }, [roles]);
 
   const hasAnyRole = useCallback((allowedRoles: string[]): boolean => {
-    if (!roles || roles.length === 0) {
-      return false;
-    }
     return allowedRoles.some(role => hasRole(role));
   }, [roles, hasRole]);
 
@@ -268,13 +212,11 @@ export const useAuth = () => {
     login,
     logout,
     checkAuthentication,
-    authAttempts,
-    maxAuthAttempts,
     loadUserData,
     hasRole,
     hasAnyRole,
     isInitializing,
-    isLoggingOut  // Este ahora viene del contexto
+    isLoggingOut
   }), [
     isSignedIn,
     usuario,
@@ -287,8 +229,6 @@ export const useAuth = () => {
     login,
     logout,
     checkAuthentication,
-    authAttempts,
-    maxAuthAttempts,
     loadUserData,
     hasRole,
     hasAnyRole,
@@ -296,9 +236,5 @@ export const useAuth = () => {
     isLoggingOut
   ]);
 };
-
-export type {
-    AuthState
-}
 
 export default useAuth;
