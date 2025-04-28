@@ -1,8 +1,9 @@
-import { AuthProvider } from './authProvider';
-import { IUser } from '@/types/interfaces/IUserAz';
-import { arquitecturaApi } from '@/services/api/arquitecturaApi';
-import { UsuarioAd } from '@/types/interfaces/IUsuarioAD';
-import { RolResponse } from '@/types/interfaces/IRol';
+import { AuthProvider } from './authProviderMsal'; 
+import { IUser } from '../../interfaces/IUserAz';
+import { UsuarioAd } from '../../interfaces/IUsuarioAD';
+import { RolResponse } from '../../interfaces/IRol';
+import { mapRawToUsuarioAd } from '../../Utils/MapperRawToUsuarioAd';
+import { mapRawArrayToRolResponseArray } from '../../Utils/MapperRawToRol';
 
 export class AuthService {
   public static async getMe(): Promise<IUser> {
@@ -30,19 +31,61 @@ export class AuthService {
 
   public static async getUsuarioAD(email: string): Promise<UsuarioAd> {
     try {
-      return await arquitecturaApi.getUsuarioAD(email);
+      const apiUrl = `${import.meta.env.VITE_APP_API_ARQUITECTURA_URL}/Usuario/mail/${email}`;
+      const headers = {
+        [import.meta.env.VITE_APP_NAME_API_KEY]: import.meta.env.VITE_APP_KEY_PASS_API_ARQ,
+        "Content-Type": "application/json; charset=utf-8",
+      };
+      
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers
+      });
+      
+      if (!response.ok) {
+        throw new Error(`${response.status} - ${response.statusText}`);
+      }
+      
+      const rawData = await response.json();
+      return mapRawToUsuarioAd(rawData);
+      
     } catch (error) {
-      console.error('Error obteniendo usuario AD:', error);
-      throw error;
+      const errorMessage = error instanceof Error 
+          ? error.message 
+          : String(error);
+          
+      throw new Error(`Error al obtener usuario para ${email}: ${errorMessage}`);
     }
   }
 
   public static async getRoles(email: string): Promise<RolResponse[]> {
     try {
-      return await arquitecturaApi.getRoles(email);
+      const sistema = import.meta.env.VITE_APP_SISTEMA;
+      const apiUrl = `${import.meta.env.VITE_APP_API_ARQUITECTURA_URL}/Rol/mail/${email}/app/${sistema}`;
+      
+      const headers = {
+        [import.meta.env.VITE_APP_NAME_API_KEY]: import.meta.env.VITE_APP_KEY_PASS_API_ARQ,
+        "Content-Type": "application/json; charset=utf-8",
+      };
+      
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers
+      });
+      
+      if (!response.ok) {
+        throw new Error(`${response.status} - ${response.statusText}`);
+      }
+      
+      const rawData = await response.json();
+      return mapRawArrayToRolResponseArray(rawData);
+      
     } catch (error) {
-      console.error('Error obteniendo roles:', error);
-      throw error;
+      const errorMessage = error instanceof Error 
+          ? error.message 
+          : String(error);
+          
+      throw new Error(`Error al obtener roles para ${email}: ${errorMessage}`);
     }
   }
 }

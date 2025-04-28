@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
-import { AuthProvider } from '@/services/auth/authProvider';
+import { AuthProvider } from '@/services/auth/authProviderMsal';
 
 export class ApiClient {
   private static instance: ApiClient;

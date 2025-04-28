@@ -5,22 +5,36 @@ interface AuthContextType {
   setIsLoggingOut: (value: boolean) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Crear el contexto con un valor predeterminado
+const AuthContext = createContext<AuthContextType>({
+  isLoggingOut: false,
+  setIsLoggingOut: () => {}
+});
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Proporcionar el valor del contexto
+  const contextValue: AuthContextType = {
+    isLoggingOut,
+    setIsLoggingOut
+  };
+
   return (
-    <AuthContext.Provider value={{ isLoggingOut, setIsLoggingOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuthContext = () => {
+export const useAuthContext = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuthContext debe utilizarse dentro de un AuthProvider');
   }
   return context;
 };

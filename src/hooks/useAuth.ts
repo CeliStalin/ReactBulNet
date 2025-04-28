@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { AuthProvider } from '../services/auth/authProvider';
+import { AuthProvider } from '../services/auth/authProviderMsal';
 import { getMe, getUsuarioAD, getRoles } from '../services/auth/authService';
 import useLocalStorage from './useLocalStorage';
 import { IUser } from '../interfaces/IUserAz';
@@ -27,6 +27,8 @@ interface UseAuthReturn extends AuthState {
   hasAnyRole: (allowedRoles: string[]) => boolean;
   isInitializing: boolean;
   isLoggingOut: boolean;
+  authAttempts: number;
+  maxAuthAttempts: number;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -44,6 +46,8 @@ export const useAuth = (): UseAuthReturn => {
   const [errorAD, setErrorAD] = useState<string | null>(null);
   const [errorRoles, setErrorRoles] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [authAttempts, setAuthAttempts] = useState<number>(0);
+  const maxAuthAttempts = 3; // Máximo número de intentos
   const cache = useRef(new Map());
 
   // Inicialización y verificación de estado de autenticación
@@ -57,6 +61,7 @@ export const useAuth = (): UseAuthReturn => {
         
         if (!mounted) return;
 
+        // Verificar si está autenticado usando la nueva implementación
         const signedIn = AuthProvider.isAuthenticated();
         
         if (signedIn !== isSignedIn) {
@@ -95,6 +100,7 @@ export const useAuth = (): UseAuthReturn => {
 
     setLoading(true);
     try {
+      // Obtener datos del usuario
       const userData = await getMe();
       
       if (typeof userData === 'string') {
@@ -146,11 +152,22 @@ export const useAuth = (): UseAuthReturn => {
   }, [isSignedIn, loadUserData]);
 
   const checkAuthentication = useCallback(() => {
-    const authenticated = AuthProvider.isAuthenticated();
-    if (authenticated !== isSignedIn) {
-      setIsSignedIn(authenticated);
+    try {
+      const authenticated = AuthProvider.isAuthenticated();
+      if (authenticated !== isSignedIn) {
+        setIsSignedIn(authenticated);
+      }
+      
+      // Incrementar contador de intentos si no está autenticado
+      if (!authenticated) {
+        setAuthAttempts(prevAttempts => prevAttempts + 1);
+      }
+      
+      return authenticated;
+    } catch (error) {
+      console.error('Error al verificar autenticación:', error);
+      return false;
     }
-    return authenticated;
   }, [isSignedIn, setIsSignedIn]);
 
   const login = useCallback(async () => {
@@ -193,10 +210,13 @@ export const useAuth = (): UseAuthReturn => {
   }, [setIsLoggingOut]);
 
   const hasRole = useCallback((roleName: string): boolean => {
-    return roles.some(role => role.Rol === roleName);
+    if (!roles || roles.length === 0) return false;
+    return roles.some(role => role && typeof role === 'object' && 'Rol' in role && role.Rol === roleName);
   }, [roles]);
 
   const hasAnyRole = useCallback((allowedRoles: string[]): boolean => {
+    if (!allowedRoles || allowedRoles.length === 0) return true;
+    if (!roles || roles.length === 0) return false;
     return allowedRoles.some(role => hasRole(role));
   }, [roles, hasRole]);
 
@@ -216,7 +236,9 @@ export const useAuth = (): UseAuthReturn => {
     hasRole,
     hasAnyRole,
     isInitializing,
-    isLoggingOut
+    isLoggingOut,
+    authAttempts,
+    maxAuthAttempts
   }), [
     isSignedIn,
     usuario,
@@ -233,7 +255,8 @@ export const useAuth = (): UseAuthReturn => {
     hasRole,
     hasAnyRole,
     isInitializing,
-    isLoggingOut
+    isLoggingOut,
+    authAttempts
   ]);
 };
 
