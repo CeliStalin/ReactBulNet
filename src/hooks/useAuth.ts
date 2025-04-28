@@ -21,7 +21,7 @@ interface AuthState {
 interface UseAuthReturn extends AuthState {
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  checkAuthentication: () => boolean;
+  checkAuthentication: () => Promise<boolean>;
   loadUserData: () => Promise<void>;
   hasRole: (roleName: string) => boolean;
   hasAnyRole: (allowedRoles: string[]) => boolean;
@@ -56,13 +56,13 @@ export const useAuth = (): UseAuthReturn => {
 
     const initializeAuth = async () => {
       try {
-        // Dar tiempo al provider para inicializarse
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Asegurarse de que MSAL esté inicializado
+        await AuthProvider.initialize();
         
         if (!mounted) return;
 
         // Verificar si está autenticado usando la nueva implementación
-        const signedIn = AuthProvider.isAuthenticated();
+        const signedIn = await AuthProvider.isAuthenticated();
         
         if (signedIn !== isSignedIn) {
           setIsSignedIn(signedIn);
@@ -151,9 +151,9 @@ export const useAuth = (): UseAuthReturn => {
     }
   }, [isSignedIn, loadUserData]);
 
-  const checkAuthentication = useCallback(() => {
+  const checkAuthentication = useCallback(async () => {
     try {
-      const authenticated = AuthProvider.isAuthenticated();
+      const authenticated = await AuthProvider.isAuthenticated();
       if (authenticated !== isSignedIn) {
         setIsSignedIn(authenticated);
       }
@@ -174,6 +174,9 @@ export const useAuth = (): UseAuthReturn => {
     try {
       setLoading(true);
       setError(null);
+      // Asegurarse de que MSAL esté inicializado
+      await AuthProvider.initialize();
+      // Iniciar sesión
       await AuthProvider.login();
       setIsSignedIn(true);
     } catch (err) {

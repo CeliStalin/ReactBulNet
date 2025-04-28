@@ -8,6 +8,10 @@ import { mapRawArrayToRolResponseArray } from '../../Utils/MapperRawToRol';
 export class AuthService {
   public static async getMe(): Promise<IUser> {
     try {
+      // Asegurarse de que MSAL esté inicializado
+      await AuthProvider.initialize();
+      
+      // Obtener token
       const token = await AuthProvider.getAccessToken(['user.read']);
       
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {

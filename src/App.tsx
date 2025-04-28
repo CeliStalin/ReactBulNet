@@ -1,16 +1,42 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider as MsalAuthProvider } from './services/auth/authProviderMsal';
 import { AuthProvider } from './context/AuthContext';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ErrorBoundary } from './components/common/ErrorBoundary';  // Importamos ErrorBoundary desde el archivo correcto
 import { LoadingOverlay } from './components/common/Loading/LoadingOverlay';
 import { PrivateRoute } from './routes/PrivateRoute';
 import { PublicRoute } from './routes/PublicRoute';
 import { routes } from './routes/routes.config';
 import './App.css';
 
+// Componente de error genérico
+const ErrorFallback = () => (
+  <div className="error-container" style={{ padding: '20px', textAlign: 'center' }}>
+    <h2>¡Ups! Algo salió mal</h2>
+    <p>Ha ocurrido un error inesperado. Intenta recargar la página.</p>
+    <button onClick={() => window.location.reload()}>
+      Recargar página
+    </button>
+  </div>
+);
+
 const App: React.FC = () => {
+  // Inicializar MSAL al cargar la aplicación
+  useEffect(() => {
+    const initMsal = async () => {
+      try {
+        await MsalAuthProvider.initialize();
+        console.log("MSAL inicializado correctamente en App");
+      } catch (error) {
+        console.error("Error al inicializar MSAL en App:", error);
+      }
+    };
+
+    initMsal();
+  }, []);
+
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallback={<ErrorFallback />}>
       <AuthProvider>
         <Router>
           <Suspense fallback={<LoadingOverlay show message="Cargando aplicación..." />}>

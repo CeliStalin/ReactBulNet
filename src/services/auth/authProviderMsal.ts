@@ -1,4 +1,4 @@
-// Implementación alternativa usando MSAL directamente
+// Implementación mejorada usando MSAL directamente
 import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo } from '@azure/msal-browser';
 
 // Configuración de MSAL
@@ -20,33 +20,56 @@ const loginRequest = {
   scopes: ['user.read', 'openid', 'profile', 'email', 'offline_access'],
 };
 
-// Crear la instancia de MSAL
+// Crear e inicializar la instancia de MSAL
 let msalInstance: PublicClientApplication | null = null;
+let initializationPromise: Promise<void> | null = null;
 
-// Inicializar MSAL
-function getMsalInstance(): PublicClientApplication {
+// Inicializar MSAL como una promesa
+function initializeMsal(): Promise<void> {
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      try {
+        msalInstance = new PublicClientApplication(msalConfig);
+        // Importante: esperar a que MSAL se inicialice completamente
+        await msalInstance.initialize();
+        console.log('MSAL inicializado correctamente');
+      } catch (error) {
+        console.error('Error al inicializar MSAL:', error);
+        msalInstance = null;
+        throw new Error('No se pudo inicializar la autenticación');
+      }
+    })();
+  }
+  return initializationPromise;
+}
+
+// Obtener la instancia de MSAL ya inicializada
+async function getMsalInstance(): Promise<PublicClientApplication> {
   if (!msalInstance) {
-    try {
-      msalInstance = new PublicClientApplication(msalConfig);
-    } catch (error) {
-      console.error('Error al inicializar MSAL:', error);
-      throw new Error('No se pudo inicializar la autenticación');
-    }
+    await initializeMsal();
+  }
+  if (!msalInstance) {
+    throw new Error('No se pudo inicializar MSAL');
   }
   return msalInstance;
 }
 
 // Clase para gestionar la autenticación
 export class AuthProvider {
+  // Inicializar el proveedor de autenticación
+  public static async initialize(): Promise<void> {
+    await initializeMsal();
+  }
+
   // Obtener la instancia de autenticación
-  public static getInstance(): PublicClientApplication {
-    return getMsalInstance();
+  public static async getInstance(): Promise<PublicClientApplication> {
+    return await getMsalInstance();
   }
 
   // Verificar si el usuario está autenticado
-  public static isAuthenticated(): boolean {
+  public static async isAuthenticated(): Promise<boolean> {
     try {
-      const instance = getMsalInstance();
+      const instance = await getMsalInstance();
       const accounts = instance.getAllAccounts();
       return accounts.length > 0;
     } catch (error) {
@@ -56,9 +79,9 @@ export class AuthProvider {
   }
 
   // Obtener cuenta activa
-  public static getActiveAccount(): AccountInfo | null {
+  public static async getActiveAccount(): Promise<AccountInfo | null> {
     try {
-      const instance = getMsalInstance();
+      const instance = await getMsalInstance();
       const accounts = instance.getAllAccounts();
       return accounts.length > 0 ? accounts[0] : null;
     } catch (error) {
@@ -70,7 +93,7 @@ export class AuthProvider {
   // Iniciar sesión
   public static async login(): Promise<void> {
     try {
-      const instance = getMsalInstance();
+      const instance = await getMsalInstance();
       await instance.loginPopup(loginRequest);
     } catch (error) {
       console.error('Error durante login:', error);
@@ -81,8 +104,8 @@ export class AuthProvider {
   // Cerrar sesión
   public static async logout(): Promise<void> {
     try {
-      const instance = getMsalInstance();
-      const account = this.getActiveAccount();
+      const instance = await getMsalInstance();
+      const account = await this.getActiveAccount();
       
       if (account) {
         const logoutRequest = {
@@ -100,8 +123,8 @@ export class AuthProvider {
   // Obtener token de acceso
   public static async getAccessToken(scopes: string[] = []): Promise<string> {
     try {
-      const instance = getMsalInstance();
-      const account = this.getActiveAccount();
+      const instance = await getMsalInstance();
+      const account = await this.getActiveAccount();
       
       if (!account) {
         throw new Error('No hay una sesión activa');
@@ -112,41 +135,40 @@ export class AuthProvider {
         account: account,
       };
       
-      const response: AuthenticationResult = await instance.acquireTokenSilent(tokenRequest);
-      return response.accessToken;
-      
-    } catch (error: any) {
-      // Si falla la adquisición silenciosa, intentar con popup
-      if (error.name === 'InteractionRequiredAuthError') {
-        try {
-          const instance = getMsalInstance();
-          const response = await instance.acquireTokenPopup(loginRequest);
-          return response.accessToken;
-        } catch (popupError) {
-          console.error('Error al adquirir token con popup:', popupError);
-          throw popupError;
-        }
+      try {
+        const response: AuthenticationResult = await instance.acquireTokenSilent(tokenRequest);
+        return response.accessToken;
+      } catch (silentError) {
+        // Si falla la adquisición silenciosa, intentar con popup
+        console.warn('Silent token acquisition failed, falling back to popup', silentError);
+        const response = await instance.acquireTokenPopup(tokenRequest);
+        return response.accessToken;
       }
-      
+    } catch (error) {
       console.error('Error al obtener access token:', error);
       throw error;
     }
   }
 }
 
-// Para mantener compatibilidad con código existente
-export function isAuthenticated(): boolean {
-  return AuthProvider.isAuthenticated();
+// Inicializar MSAL automáticamente al cargar este módulo
+initializeMsal().catch(error => {
+  console.error('Failed to initialize MSAL:', error);
+});
+
+// Funciones de compatibilidad para el código existente
+export async function isAuthenticated(): Promise<boolean> {
+  return await AuthProvider.isAuthenticated();
 }
 
-export function login(): Promise<void> {
-  return AuthProvider.login();
+export async function login(): Promise<void> {
+  return await AuthProvider.login();
 }
 
-export function logout(): Promise<void> {
-  return AuthProvider.logout();
+export async function logout(): Promise<void> {
+  return await AuthProvider.logout();
 }
 
-export function getAccessToken(scopes?: string[]): Promise<string> {
-  return AuthProvider.getAccessToken(scopes);
+export async function getAccessToken(scopes?: string[]): Promise<string> {
+  return await AuthProvider.getAccessToken(scopes);
 }

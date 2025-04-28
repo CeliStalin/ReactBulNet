@@ -50,6 +50,7 @@ const Login: React.FC = () => {
       // La navegación se maneja en useEffect
     } catch (error) {
       console.error('Error during login:', error);
+    } finally {
       setIsLoggingIn(false);
     }
   };
@@ -57,7 +58,7 @@ const Login: React.FC = () => {
   return (
     <>
       <Header 
-       logoUrl={logoIcon}
+        logoUrl={logoIcon}
         altText="Consalud Logo"
       />
 
@@ -74,7 +75,7 @@ const Login: React.FC = () => {
                     </span>
                   </h1>
                   
-                  {loading || isLoggingIn ? (
+                  {loading || isLoggingIn || isInitializing ? (
                     <div className="field" style={{ width: '100%' }}>
                       <div className="control">
                         <button 
