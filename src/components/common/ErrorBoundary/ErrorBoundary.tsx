@@ -19,14 +19,19 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // Actualizar el estado para que el siguiente renderizado muestre la UI alternativa
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Modificamos esta línea para usar solo 2 argumentos
+    // Registrar el error de forma segura
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    const componentStack = errorInfo.componentStack || 'No component stack available';
+    
+    // Usar objeto simple en lugar del objeto de error completo
     logger.error('Error boundary caught an error:', { 
-      error, 
-      componentStack: errorInfo.componentStack 
+      errorMessage,
+      componentStack 
     });
   }
 
@@ -47,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p>Lo sentimos, ha ocurrido un error inesperado.</p>
             {this.state.error && (
               <p style={{ color: '#666', fontSize: '14px' }}>
-                {this.state.error.message}
+                {this.state.error.message || 'Error sin mensaje'}
               </p>
             )}
             <div style={{ marginTop: '20px' }}>

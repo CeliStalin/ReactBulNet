@@ -2,7 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider as MsalAuthProvider } from './services/auth/authProviderMsal';
 import { AuthProvider } from './context/AuthContext';
-import { ErrorBoundary } from './components/common/ErrorBoundary';  // Importamos ErrorBoundary desde el archivo correcto
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingOverlay } from './components/common/Loading/LoadingOverlay';
 import { PrivateRoute } from './routes/PrivateRoute';
 import { PublicRoute } from './routes/PublicRoute';
@@ -28,11 +28,31 @@ const App: React.FC = () => {
         await MsalAuthProvider.initialize();
         console.log("MSAL inicializado correctamente en App");
       } catch (error) {
-        console.error("Error al inicializar MSAL en App:", error);
+        // Evitamos imprimir el objeto de error directamente
+        console.error("Error al inicializar MSAL en App:", 
+          error instanceof Error ? error.message : 'Error desconocido');
       }
     };
 
     initMsal();
+  }, []);
+
+  // Manejar redirecciones de autenticación
+  useEffect(() => {
+    const handleRedirectPromise = async () => {
+      try {
+        const response = await MsalAuthProvider.handleRedirectPromise();
+        if (response) {
+          console.log('Se ha procesado una redirección de autenticación');
+        }
+      } catch (error) {
+        // Evitamos imprimir el objeto de error directamente
+        console.error('Error al manejar redirección de autenticación:', 
+          error instanceof Error ? error.message : 'Error desconocido');
+      }
+    };
+    
+    handleRedirectPromise();
   }, []);
 
   return (

@@ -14,11 +14,8 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   redirectPath = '/login'
 }) => {
   // Obtener el estado de autenticación y los roles del usuario
-  const auth = useAuth();
+  const { isSignedIn, roles, isInitializing, loading } = useAuth();
   const location = useLocation();
-  
-  // Desestructurar solo lo que necesitamos para evitar problemas con objetos complejos
-  const { isSignedIn, isInitializing, loading } = auth;
   
   // Si está cargando o inicializando, mostrar un indicador de carga simple
   if (isInitializing || loading) {
@@ -28,7 +25,7 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        flexDirection: 'column' as const
+        flexDirection: 'column'
       }}>
         <div>Verificando acceso...</div>
       </div>
@@ -42,14 +39,25 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 
   // Si se requieren roles específicos, verificar si el usuario tiene al menos uno
   if (allowedRoles.length > 0) {
-    // Extraer los nombres de los roles manualmente para evitar problemas de serialización
-    const userRoleNames: string[] = (auth.roles || []).map(role => {
-      // Evitar acceder a propiedades de objetos undefined
-      return role && typeof role === 'object' && 'Rol' in role ? String(role.Rol) : '';
-    }).filter(Boolean);
+    // Extraer los nombres de los roles de forma segura
+    const userRoleNames: string[] = [];
+    
+    // Procesamiento seguro de roles
+    if (roles && Array.isArray(roles)) {
+      for (const role of roles) {
+        if (role && typeof role === 'object' && 'Rol' in role) {
+          userRoleNames.push(String(role.Rol));
+        }
+      }
+    }
     
     // Verificar si tiene alguno de los roles permitidos
-    const hasPermission = allowedRoles.some(role => userRoleNames.includes(role));
+    const hasPermission = allowedRoles.some(role => {
+      // Comprobar de forma insensible a mayúsculas/minúsculas
+      return userRoleNames.some(userRole => 
+        userRole.toLowerCase() === role.toLowerCase()
+      );
+    });
     
     if (!hasPermission) {
       return <Navigate to="/unauthorized" state={{ from: location }} replace />;

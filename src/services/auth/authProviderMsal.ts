@@ -1,13 +1,15 @@
 // Implementación mejorada usando MSAL directamente
-import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo } from '@azure/msal-browser';
+import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo, PopupRequest, RedirectRequest } from '@azure/msal-browser';
 
 // Configuración de MSAL
 const msalConfig: Configuration = {
   auth: {
     clientId: import.meta.env.VITE_APP_CLIENT_ID || '',
     authority: import.meta.env.VITE_APP_AUTHORITY || '',
-    redirectUri: window.location.origin,
+    // Usar la URI configurada en Azure
+    redirectUri: `${window.location.origin}/login`,
     postLogoutRedirectUri: window.location.origin,
+    navigateToLoginRequestUrl: true,
   },
   cache: {
     cacheLocation: 'sessionStorage',
@@ -16,8 +18,9 @@ const msalConfig: Configuration = {
 };
 
 // Scopes de la aplicación
-const loginRequest = {
+const loginRequest: PopupRequest | RedirectRequest = {
   scopes: ['user.read', 'openid', 'profile', 'email', 'offline_access'],
+  prompt: 'select_account', // Esto fuerza la selección de cuenta
 };
 
 // Crear e inicializar la instancia de MSAL
@@ -33,6 +36,13 @@ function initializeMsal(): Promise<void> {
         // Importante: esperar a que MSAL se inicialice completamente
         await msalInstance.initialize();
         console.log('MSAL inicializado correctamente');
+        
+        // Para facilitar la depuración
+        console.log('Config MSAL:', {
+          clientId: msalConfig.auth.clientId,
+          redirectUri: msalConfig.auth.redirectUri,
+          authority: msalConfig.auth.authority
+        });
       } catch (error) {
         console.error('Error al inicializar MSAL:', error);
         msalInstance = null;
@@ -90,14 +100,70 @@ export class AuthProvider {
     }
   }
 
+  // Limpiar la caché de cuentas
+  public static async clearAccounts(): Promise<void> {
+    try {
+      const instance = await getMsalInstance();
+      const accounts = instance.getAllAccounts();
+      
+      for (const account of accounts) {
+        await instance.logoutRedirect({
+          account: account,
+          postLogoutRedirectUri: window.location.origin
+        });
+      }
+    } catch (error) {
+      console.error('Error al limpiar cuentas:', error);
+    }
+  }
+
   // Iniciar sesión
   public static async login(): Promise<void> {
     try {
+      await this.clearAccounts(); // Limpiar sesiones anteriores
+      
       const instance = await getMsalInstance();
-      await instance.loginPopup(loginRequest);
+      console.log('Iniciando loginPopup con redirectUri:', msalConfig.auth.redirectUri);
+      
+      const loginResponse = await instance.loginPopup({
+        ...loginRequest,
+        redirectUri: msalConfig.auth.redirectUri,
+        prompt: 'select_account' // Forzar selección de cuenta
+      });
+      
+      console.log('Login exitoso:', loginResponse);
     } catch (error) {
       console.error('Error durante login:', error);
       throw error;
+    }
+  }
+
+  // Método alternativo usando redirección en lugar de popup
+  public static async loginRedirect(): Promise<void> {
+    try {
+      await this.clearAccounts(); // Limpiar sesiones anteriores
+      
+      const instance = await getMsalInstance();
+      console.log('Iniciando loginRedirect con redirectUri:', msalConfig.auth.redirectUri);
+      await instance.loginRedirect({
+        ...loginRequest,
+        redirectUri: msalConfig.auth.redirectUri,
+        prompt: 'select_account' // Forzar selección de cuenta
+      });
+    } catch (error) {
+      console.error('Error durante loginRedirect:', error);
+      throw error;
+    }
+  }
+  
+  // Manejar el resultado de la redirección
+  public static async handleRedirectPromise(): Promise<AuthenticationResult | null> {
+    try {
+      const instance = await getMsalInstance();
+      return await instance.handleRedirectPromise();
+    } catch (error) {
+      console.error('Error al manejar redirección:', error);
+      return null;
     }
   }
 
@@ -110,9 +176,10 @@ export class AuthProvider {
       if (account) {
         const logoutRequest = {
           account: account,
+          postLogoutRedirectUri: window.location.origin
         };
         
-        await instance.logout(logoutRequest);
+        await instance.logoutPopup(logoutRequest);
       }
     } catch (error) {
       console.error('Error durante logout:', error);

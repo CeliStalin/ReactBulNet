@@ -17,12 +17,50 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
     isLoggingOut,
     checkAuthentication,
     authAttempts,
-    maxAuthAttempts
+    maxAuthAttempts,
+    hasAnyRole
   } = useAuth();
   
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
+
+  // Verificación de roles mejorada
+  useEffect(() => {
+    const checkRoles = () => {
+      if (!isSignedIn || !roles || roles.length === 0) {
+        console.log('[RoleProtectedRoute] Usuario no autenticado o sin roles');
+        setHasPermission(false);
+        return;
+      }
+
+      console.log('[RoleProtectedRoute] Verificando roles:', allowedRoles);
+      console.log('[RoleProtectedRoute] Roles del usuario:', roles.map(r => r.Rol));
+      
+      // Verificar si el usuario tiene alguno de los roles permitidos
+      const userRoles = roles.map(role => role.Rol);
+      
+      // Comprobar roles de forma case-insensitive
+      const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+      const normalizedUserRoles = userRoles.map(r => r.toLowerCase());
+      
+      // También comprobar con hasAnyRole para tener doble verificación
+      const hasRole = normalizedAllowedRoles.some(role => 
+        normalizedUserRoles.includes(role)
+      );
+      
+      const hasRoleFromHook = hasAnyRole(allowedRoles);
+      
+      console.log('[RoleProtectedRoute] ¿Tiene algún rol permitido?', hasRole);
+      console.log('[RoleProtectedRoute] ¿Tiene rol según hook?', hasRoleFromHook);
+      
+      // Si alguna de las dos verificaciones es positiva, permitir acceso
+      setHasPermission(hasRole || hasRoleFromHook);
+    };
+    
+    checkRoles();
+  }, [isSignedIn, roles, allowedRoles, hasAnyRole]);
 
   useEffect(() => {
     // Si está cerrando sesión, mostrar pantalla de logout
@@ -99,19 +137,18 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
 
   // Redirección inmediata a login si no está autenticado
   if (!isSignedIn) {
+    console.log('[RoleProtectedRoute] Usuario no autenticado, redirigiendo a login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Verificación de roles
-  const userRoles = roles.map(role => role.Rol);
-  const hasPermission = allowedRoles.some(role => userRoles.includes(role));
-
   // Redirección si no tiene permisos
   if (!hasPermission) {
+    console.log('[RoleProtectedRoute] Usuario sin permisos, redirigiendo a unauthorized');
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
 
   // Solo renderizar el elemento si está autenticado y tiene permisos
+  console.log('[RoleProtectedRoute] Usuario autenticado y con permisos, mostrando contenido');
   return <>{element}</>;
 };
 

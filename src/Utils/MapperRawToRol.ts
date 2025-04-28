@@ -3,7 +3,8 @@ import { RolResponse } from '../interfaces/IRol'
 
 
 const mapRawToRolResponse = (rawData: RawRolResponse): RolResponse => {
-    return {
+    console.log('[MapperRawToRol] Mapeando rol:', rawData);
+    const rolResponse = {
       IdUsuario: rawData.ID_USUARIO,
       CodApp: rawData.COD_APLICACION,
       Rol: rawData.ROL,
@@ -19,11 +20,26 @@ const mapRawToRolResponse = (rawData: RawRolResponse): RolResponse => {
       FechaModificacion: new Date(rawData.FECHA_MODIF),
       FuncionModificacion: rawData.FUNCION_MODIF
     };
+    console.log('[MapperRawToRol] Rol mapeado:', rolResponse);
+    return rolResponse;
   };
   
   
   const mapRawArrayToRolResponseArray = (rawDataArray: RawRolResponse[]): RolResponse[] => {
-    return rawDataArray.map(rawData => mapRawToRolResponse(rawData));
+    console.log('[MapperRawToRol] Mapeando array de roles, cantidad:', rawDataArray?.length);
+    if (!rawDataArray || !Array.isArray(rawDataArray)) {
+      console.warn('[MapperRawToRol] Los datos de roles no son un array válido:', rawDataArray);
+      return [];
+    }
+    
+    try {
+      const mappedRoles = rawDataArray.map(rawData => mapRawToRolResponse(rawData));
+      console.log('[MapperRawToRol] Roles mapeados completos:', mappedRoles);
+      return mappedRoles;
+    } catch (error) {
+      console.error('[MapperRawToRol] Error al mapear roles:', error);
+      return [];
+    }
   };
   
   export { mapRawToRolResponse, mapRawArrayToRolResponseArray };
