@@ -24,7 +24,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   
   const prevPathRef = useRef(location.pathname);
 
-  // Prueba de roles 
+  // Manejo roles 
   const userRoleDetails = useMemo(() => {
     return roles.map(role => ({
       rol: role.Rol,
