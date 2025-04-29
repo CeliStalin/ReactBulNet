@@ -20,19 +20,17 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
+  // Cambiar el estado inicial a true para que esté colapsado por defecto
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   
   const prevPathRef = useRef(location.pathname);
 
-  // Manejo roles 
-  const userRoleDetails = useMemo(() => {
-    return roles.map(role => ({
-      rol: role.Rol,
-      isDevelopers: role.Rol === "Developers"
-    }));
+  const userRoles = useMemo(() => {
+    return roles.map(role => role.Rol);
   }, [roles]);
 
   useEffect(() => {
+    // Al iniciar, establecer el menú como colapsado
     if (onToggle) {
       onToggle(true);
     }
@@ -49,41 +47,34 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        if (userRoleDetails.length === 0) {
+        if (userRoles.length === 0) {
           setMenuItems([]);
           setLoading(false);
           return;
         }
   
-        // Verificar si alguno de los roles es Developers
-        const hasDevelopersRole = userRoleDetails.some(role => role.isDevelopers);
+        const results = await Promise.all(
+          userRoles.map(async (role) => {
+            try {
+              const items = await ApiGetMenus(role);
+
+              return items ? items.filter(item => 
+                item.Rol === role || 
+                item.TipoRol === role
+              ) : [];
+            } catch (err) {
+              return [];
+            }
+          })
+        );
         
-        if (hasDevelopersRole) {
-          const results = await Promise.all(
-            userRoleDetails
-              .filter(role => role.isDevelopers)
-              .map(async (roleDetail) => {
-                try {
-                  const items = await ApiGetMenus(roleDetail.rol);
-                  return items || [];
-                } catch (err) {
-                  console.error(`Error fetching menu for role ${roleDetail.rol}:`, err);
-                  return [];
-                }
-              })
-          );
-          
-          const allMenus = results.flat();
-          
-          const uniqueMenus = Array.from(
-            new Map(allMenus.map(item => [item.Id, item])).values()
-          );
+        const allMenus = results.flat();
+        
+        const uniqueMenus = Array.from(
+          new Map(allMenus.map(item => [item.Id, item])).values()
+        );
   
-          setMenuItems(uniqueMenus);
-        } else {
-          // Si no hay rol Developers, dejar el menú vacío
-          setMenuItems([]);
-        }
+        setMenuItems(uniqueMenus);
       } catch (error) {
         setMenuItems([]);
         console.error("Error al cargar menús:", error instanceof Error ? error.message : String(error));
@@ -93,7 +84,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     };
   
     fetchMenu();
-  }, [userRoleDetails]);
+  }, [userRoles]);
 
   const handleToggle = () => {
     const newState = !isCollapsed;
@@ -201,37 +192,35 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
                 />
               </MenuSection>
 
-              {/* Menú de Aplicaciones solo para rol Developers */}
-              {userRoleDetails.some(role => role.isDevelopers) && (
-                <MenuSection title="Aplicaciones">
-                  {menuItems.length > 0 ? (
-                    menuItems.map((item) => (
-                      <MenuItem 
-                        key={item.Id}
-                        to={item.Controlador}
-                        label={item.Nombre}
-                        onClick={() => handleMenuClick(item.Controlador)}
-                        isActive={isPathActive(item.Controlador)}
-                      />
-                    ))
-                  ) : (
-                    <>
-                      <MenuItem 
-                        to="/MnHerederos/ingresoHer"
-                        label="Ingreso Herederos"
-                        onClick={() => handleMenuClick('/MnHerederos/ingresoHer')}
-                        isActive={isPathActive('/MnHerederos/ingresoHer')}
-                      />
-                      <MenuItem 
-                        to="/MnHerederos/ingresoDoc"
-                        label="Ingreso Documentos"
-                        onClick={() => handleMenuClick('/MnHerederos/ingresoDoc')}
-                        isActive={isPathActive('/MnHerederos/ingresoDoc')}
-                      />
-                    </>
-                  )}
-                </MenuSection>
-              )}
+            {/* Menú de Aplicaciones simplificado */}
+<MenuSection title="Aplicaciones">
+  {menuItems.length > 0 ? (
+    menuItems.map((item) => (
+      <MenuItem 
+        key={item.Id}
+        to={item.Controlador}
+        label={item.Nombre}
+        onClick={() => handleMenuClick(item.Controlador)}
+        isActive={isPathActive(item.Controlador)}
+      />
+    ))
+  ) : (
+    <>
+      <MenuItem 
+        to="/MnHerederos/ingresoHer"
+        label="Ingreso Herederos"
+        onClick={() => handleMenuClick('/MnHerederos/ingresoHer')}
+        isActive={isPathActive('/MnHerederos/ingresoHer')}
+      />
+      <MenuItem 
+        to="/MnHerederos/ingresoDoc"
+        label="Ingreso Documentos"
+        onClick={() => handleMenuClick('/MnHerederos/ingresoDoc')}
+        isActive={isPathActive('/MnHerederos/ingresoDoc')}
+      />
+    </>
+  )}
+</MenuSection>
             </ul>
           </div>
         </aside>
