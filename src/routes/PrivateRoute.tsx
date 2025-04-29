@@ -1,5 +1,4 @@
-// src/routes/PrivateRoute.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
@@ -14,12 +13,20 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   allowedRoles = [],
   redirectPath = '/login'
 }) => {
-  // Obtener el estado de autenticación y los roles del usuario
-  const { isSignedIn, roles, isInitializing, loading } = useAuth();
+  // Eliminamos 'roles' de la desestructuración ya que no se usa directamente
+  const { isSignedIn, isInitializing, loading, hasAnyRole } = useAuth();
   const location = useLocation();
+  const [isVerifying, setIsVerifying] = useState(true);
+  
+  useEffect(() => {
+    // Solo verificamos una vez que la autenticación esté completa
+    if (!isInitializing && !loading) {
+      setIsVerifying(false);
+    }
+  }, [isInitializing, loading]);
   
   // Si está cargando o inicializando, mostrar un indicador de carga simple
-  if (isInitializing || loading) {
+  if (isInitializing || loading || isVerifying) {
     return (
       <div style={{
         display: 'flex',
@@ -40,27 +47,11 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
 
   // Si se requieren roles específicos, verificar si el usuario tiene al menos uno
   if (allowedRoles.length > 0) {
-    // Extraer los nombres de los roles de forma segura
-    const userRoleNames: string[] = [];
+    // Verificación mejorada de roles utilizando hasAnyRole del hook
+    const userHasPermission = hasAnyRole(allowedRoles);
     
-    // Procesamiento seguro de roles
-    if (roles && Array.isArray(roles)) {
-      for (const role of roles) {
-        if (role && typeof role === 'object' && 'Rol' in role) {
-          userRoleNames.push(String(role.Rol));
-        }
-      }
-    }
-    
-    // Verificar si tiene alguno de los roles permitidos
-    const hasPermission = allowedRoles.some(role => {
-      // Comprobar de forma insensible a mayúsculas/minúsculas
-      return userRoleNames.some(userRole => 
-        userRole.toLowerCase() === role.toLowerCase()
-      );
-    });
-    
-    if (!hasPermission) {
+    if (!userHasPermission) {
+      // Redirigir a página de no autorizado si no tiene los roles
       return <Navigate to="/unauthorized" state={{ from: location }} replace />;
     }
   }

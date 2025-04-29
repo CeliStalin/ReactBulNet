@@ -29,8 +29,8 @@ const App: React.FC = () => {
     const initMsal = async () => {
       try {
         await MsalAuthProvider.initialize();
-        ("MSAL inicializado correctamente en App");
-      } catch (error) {console.log
+        console.log("MSAL inicializado correctamente en App");
+      } catch (error) {
         // Evitamos imprimir el objeto de error directamente
         console.error("Error al inicializar MSAL en App:", 
           error instanceof Error ? error.message : 'Error desconocido');
@@ -45,23 +45,19 @@ const App: React.FC = () => {
     const handleRedirectPromise = async () => {
       try {
         setIsHandlingRedirect(true);
-        ("Verificando si hay redirecciones pendientes...");
+        console.log("Verificando si hay redirecciones pendientes...");
         
         const response = await MsalAuthProvider.handleRedirectPromise();
         if (response) {
-          
           // Determinar si es login o logout y guardar estado
           const isLoginRedirect = response.account !== null;
           if (isLoginRedirect) {
             localStorage.setItem('isLogin', 'true');
             sessionStorage.setItem('authMethod', 'redirect');
-          } else {
           }
-        } else {
         }
       } catch (error) {
-
-     // Evitamos imprimir el objeto de error directamente
+        // Evitamos imprimir el objeto de error directamente
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
         console.error('Error al manejar redirección de autenticación:', errorMessage);
         setRedirectError(errorMessage);
@@ -148,7 +144,7 @@ const App: React.FC = () => {
                     key={route.path}
                     path={route.path}
                     element={
-                      <PrivateRoute allowedRoles={route.roles}>
+                      <PrivateRoute allowedRoles={route.roles || []}>
                         <route.component />
                       </PrivateRoute>
                     }

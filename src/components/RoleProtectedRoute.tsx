@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import { LoadingDots } from './Login/components/LoadingDots';
+import { LoadingDots } from '../components/Login/components/LoadingDots';
 
 interface RoleProtectedRouteProps {
   element: React.ReactNode;
@@ -15,79 +15,25 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
     isInitializing, 
     loading, 
     isLoggingOut,
-    checkAuthentication,
-    authAttempts,
-    maxAuthAttempts,
     hasAnyRole
   } = useAuth();
   
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
 
   // Verificación de roles mejorada
   useEffect(() => {
-    const checkRoles = () => {
-      if (!isSignedIn || !roles || roles.length === 0) {
-        setHasPermission(false);
-        return;
+    if (!isInitializing && !loading) {
+      // Solo verificar si está autenticado
+      if (isSignedIn) {
+        // Verificación con hasAnyRole para mayor seguridad
+        const userHasPermission = hasAnyRole(allowedRoles);
+        setHasPermission(userHasPermission);
       }
-
-      // Verificar si el usuario tiene alguno de los roles permitidos
-      const userRoles = roles.map(role => role.Rol);
-      
-      // Comprobar roles de forma case-insensitive
-      const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
-      const normalizedUserRoles = userRoles.map(r => r.toLowerCase());
-      
-      // También comprobar con hasAnyRole para tener doble verificación
-      const hasRole = normalizedAllowedRoles.some(role => 
-        normalizedUserRoles.includes(role)
-      );
-      
-      const hasRoleFromHook = hasAnyRole(allowedRoles);
-      
-      // Si alguna de las dos verificaciones es positiva, permitir acceso
-      setHasPermission(hasRole || hasRoleFromHook);
-    };
-    
-    checkRoles();
-  }, [isSignedIn, roles, allowedRoles, hasAnyRole]);
-
-  useEffect(() => {
-    // Si está cerrando sesión, mostrar pantalla de logout
-    if (isLoggingOut) {
-      return;
-    }
-
-    // Verificación inicial de autenticación
-    const verifyAuth = async () => {
-      // Si ya está autenticado, salir
-      if (isSignedIn && !isInitializing && !loading) {
-        setIsChecking(false);
-        setHasCheckedAuth(true);
-        return;
-      }
-
-      // Si está inicializando o cargando, esperar
-      if (isInitializing || loading) {
-        return;
-      }
-
-      // Si no está autenticado y no hemos superado los intentos máximos
-      if (!isSignedIn && authAttempts < maxAuthAttempts) {
-        checkAuthentication();
-        return;
-      }
-
-      // Si llegamos aquí, ya hemos terminado de verificar
       setIsChecking(false);
-      setHasCheckedAuth(true);
-    };
-
-    verifyAuth();
-  }, [isSignedIn, isInitializing, loading, isLoggingOut, authAttempts, maxAuthAttempts, checkAuthentication]);
+    }
+  }, [isSignedIn, roles, allowedRoles, hasAnyRole, isInitializing, loading]);
 
   // Pantalla de cierre de sesión
   if (isLoggingOut) {
@@ -110,7 +56,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
   }
 
   // Pantalla de carga mientras verificamos autenticación
-  if (isChecking || isInitializing || loading || !hasCheckedAuth) {
+  if (isChecking || isInitializing || loading) {
     return (
       <div style={{
         display: 'flex',

@@ -13,11 +13,11 @@ interface SecureLayoutProps {
 const SecureLayout: React.FC<SecureLayoutProps> = ({ 
   children, 
   pageTitle, 
-  allowedRoles = ['USER', 'ADMIN', 'Developers'] 
+  allowedRoles = ['Developers'] 
 }) => {
   const { 
     isSignedIn, 
-    roles, 
+    hasAnyRole,
     isInitializing, 
     loading,
     isLoggingOut
@@ -38,17 +38,17 @@ const SecureLayout: React.FC<SecureLayoutProps> = ({
 
     // Si está autenticado, verificar roles
     if (isSignedIn && !isInitializing && !loading) {
-      const userRoles = roles.map(role => role.Rol);
-      const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+      const hasPermission = hasAnyRole(allowedRoles);
       
       if (!hasPermission) {
+        console.log(`Usuario sin acceso a ruta protegida: ${location.pathname}. Roles requeridos: ${allowedRoles.join(', ')}`);
         navigate('/unauthorized', { 
           replace: true,
           state: { from: location } 
         });
       }
     }
-  }, [isSignedIn, roles, isInitializing, loading, isLoggingOut, allowedRoles, navigate, location]);
+  }, [isSignedIn, hasAnyRole, isInitializing, loading, isLoggingOut, allowedRoles, navigate, location]);
 
   // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing || loading) {
@@ -95,8 +95,7 @@ const SecureLayout: React.FC<SecureLayoutProps> = ({
   }
 
   // Verificar roles antes de renderizar
-  const userRoles = roles.map(role => role.Rol);
-  const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+  const hasPermission = hasAnyRole(allowedRoles);
   
   if (!hasPermission) {
     return null; // La redirección se maneja en useEffect

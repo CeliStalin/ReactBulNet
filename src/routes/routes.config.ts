@@ -1,3 +1,4 @@
+// src/routes/routes.config.ts
 import { lazy } from 'react';
 import { RouteConfig } from './types';
 
@@ -7,7 +8,7 @@ const MainPage = lazy(() => import('../components/MainPage'));
 const Dashboard = lazy(() => import('../components/Dashboard/DashboardPage')); 
 const IngresoHerederos = lazy(() => import('../components/IngresoHerederos/IngresoHerederos'));
 const IngresoDocumentos = lazy(() => import('../components/IngresoDocumentos/IngresoDocumentos'));
-const NotFound = lazy(() => import('../components/NotFound')); 
+const NotFound = lazy(() => import('../components/NotFound'));
 const Unauthorized = lazy(() => import('../components/Unauthorized'));
 const HomePage = lazy(() => import('../components/HomePage')); 
 
@@ -45,14 +46,15 @@ export const routes: RouteConfig[] = [
     component: Dashboard,
     roles: ['ADMIN', 'Developers'],
   },
+  
   {
     path: '/MnHerederos/ingresoHer',
     component: IngresoHerederos,
-    roles: ['USER', 'ADMIN', 'Developers'],
+    roles: ['Developers'], 
   },
   {
     path: '/MnHerederos/ingresoDoc',
     component: IngresoDocumentos,
-    roles: ['USER', 'ADMIN', 'Developers'],
+    roles: ['Developers'], 
   },
 ];

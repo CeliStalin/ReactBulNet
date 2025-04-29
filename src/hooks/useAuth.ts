@@ -267,18 +267,42 @@ export const useAuth = (): UseAuthReturn => {
   }, [roles]);
 
   const hasAnyRole = useCallback((allowedRoles: string[]): boolean => {
+    // Si no se requieren roles, permitir acceso
     if (!allowedRoles || allowedRoles.length === 0) {
       return true;
     }
     
+    // Si no hay roles asignados, denegar acceso
     if (!roles || roles.length === 0) {
+      console.log('Usuario sin roles intentando acceder a ruta protegida');
       return false;
     }
     
-    const hasPermission = allowedRoles.some(role => hasRole(role));
+    // Crear arrays normalizados para comparación case-insensitive
+    const normalizedAllowedRoles = allowedRoles.map(role => 
+      typeof role === 'string' ? role.toLowerCase() : ''
+    );
+    
+    const normalizedUserRoles = roles.map(role => 
+      role && typeof role === 'object' && 'Rol' in role && typeof role.Rol === 'string' 
+        ? role.Rol.toLowerCase() 
+        : ''
+    );
+    
+    // Verificar si tiene alguno de los roles permitidos
+    const hasPermission = normalizedAllowedRoles.some(role => 
+      normalizedUserRoles.includes(role)
+    );
+    
+    if (!hasPermission) {
+      console.log(
+        `Usuario sin permisos. Roles requeridos: [${allowedRoles.join(', ')}], ` +
+        `Roles de usuario: [${roles.map(r => r.Rol).join(', ')}]`
+      );
+    }
     
     return hasPermission;
-  }, [roles, hasRole]);
+  }, [roles]);
 
   return useMemo(() => ({
     isSignedIn,
