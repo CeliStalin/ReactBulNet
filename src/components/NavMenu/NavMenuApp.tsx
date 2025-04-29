@@ -92,18 +92,17 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   if (loading) {
     return (
       <div 
-        className="columns is-gapless"
         style={{
           width: '220px',
           position: 'fixed',
           left: 0,
           top: '4rem',
           height: 'calc(100vh - 4rem)',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#f9f9f9',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '2px 0 5px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.07)'
         }}
       >
         <div 
@@ -132,9 +131,8 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   }
 
   return (
-    <div className="columns is-gapless">
+    <div>
       <div 
-        className="column has-background-light" 
         style={navMenuStyles.container(isCollapsed)}
       >
         <aside className="menu">
@@ -150,7 +148,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
           </p>
           
           <div style={navMenuStyles.menuContent(isCollapsed)}>
-            <ul className="menu-list" style={{ padding: 0 }}>
+            <ul className="menu-list" style={{ padding: 0, listStyle: 'none' }}>
               {/* Menú Básico - Inicio (visible para todos los roles) */}
               <MenuSection>
                 <MenuItem 

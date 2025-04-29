@@ -1,20 +1,22 @@
 import { apiClient } from './apiClient';
-import { RolResponse } from '@/types/interfaces/IRol';
-import { UsuarioAd } from '@/types/interfaces/IUsuarioAD';
-import { ElementMenu } from '@/types/interfaces/IMenusElementos';
+import { RolResponse } from '../../interfaces/IRol';
+import { UsuarioAd } from '../../interfaces/IUsuarioAD';
+import { ElementMenu } from '../../interfaces/IMenusElementos';
+import { RawRolResponse } from '../../interfaces/IRawRolResponse';
+import { RawUsuarioAD } from '../../interfaces/IRawUsuarioAD';
+import { RawMenusElemento } from '../../interfaces/IRawMenusElmento';
 import { 
   mapRawArrayToRolResponseArray, 
   mapRawToUsuarioAd, 
   mapRawArrayToElementMenuArray 
-} from '@/Utils/mappers';
+} from '../../Utils/mappers';
 
 export class ArquitecturaApi {
-  private static readonly BASE_PATH = '';
 
   public static async getRoles(email: string): Promise<RolResponse[]> {
     try {
-      const sistema = import.meta.env.VITE_APP_SISTEMA;
-      const rawData = await apiClient.get(`/Rol/mail/${email}/app/${sistema}`);
+      const sistema = import.meta.env.VITE_SISTEMA || import.meta.env.VITE_APP_SISTEMA;
+      const rawData = await apiClient.get<RawRolResponse[]>(`/Rol/mail/${email}/app/${sistema}`);
       return mapRawArrayToRolResponseArray(rawData);
     } catch (error) {
       console.error('Error al obtener roles:', error);
@@ -24,7 +26,7 @@ export class ArquitecturaApi {
 
   public static async getUsuarioAD(email: string): Promise<UsuarioAd> {
     try {
-      const rawData = await apiClient.get(`/Usuario/mail/${email}`);
+      const rawData = await apiClient.get<RawUsuarioAD>(`/Usuario/mail/${email}`);
       return mapRawToUsuarioAd(rawData);
     } catch (error) {
       console.error('Error al obtener usuario AD:', error);
@@ -38,8 +40,8 @@ export class ArquitecturaApi {
     }
 
     try {
-      const sistema = import.meta.env.VITE_APP_SISTEMA;
-      const rawData = await apiClient.get(`/Elemento/${rol}/${sistema}`);
+      const sistema = import.meta.env.VITE_SISTEMA || import.meta.env.VITE_APP_SISTEMA;
+      const rawData = await apiClient.get<RawMenusElemento[]>(`/Elemento/${rol}/${sistema}`);
       return mapRawArrayToElementMenuArray(rawData);
     } catch (error) {
       console.error('Error al obtener menús:', error);
