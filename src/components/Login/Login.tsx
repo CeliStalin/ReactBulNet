@@ -1,3 +1,4 @@
+// src/components/Login/Login.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -65,7 +66,8 @@ const Login: React.FC = () => {
     if (isSignedIn && !isInitializing && !loading) {
       console.log('Usuario autenticado, redirigiendo...');
       const state = location.state as LocationState;
-      const from = state?.from?.pathname || '/';
+      // Cambiado: redirigir a /home por defecto en lugar de /
+      const from = state?.from?.pathname || '/home';
       navigate(from, { replace: true });
     }
   }, [isSignedIn, isInitializing, loading, navigate, location]);

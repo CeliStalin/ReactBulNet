@@ -9,6 +9,7 @@ const IngresoHerederos = lazy(() => import('../components/IngresoHerederos/Ingre
 const IngresoDocumentos = lazy(() => import('../components/IngresoDocumentos/IngresoDocumentos'));
 const NotFound = lazy(() => import('../components/NotFound'));
 const Unauthorized = lazy(() => import('../components/Unauthorized'));
+const HomePage = lazy(() => import('../components/HomePage')); // Nuevo componente HomePage
 
 export const routes: RouteConfig[] = [
   // Rutas públicas
@@ -32,6 +33,11 @@ export const routes: RouteConfig[] = [
   {
     path: '/',
     component: MainPage,
+    roles: ['USER', 'ADMIN', 'Developers'],
+  },
+  {
+    path: '/home', // Nueva ruta para la página principal después del login
+    component: HomePage,
     roles: ['USER', 'ADMIN', 'Developers'],
   },
   {

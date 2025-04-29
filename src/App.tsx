@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider as MsalAuthProvider } from './services/auth/authProviderMsal';
@@ -61,6 +62,9 @@ const App: React.FC = () => {
         <Router>
           <Suspense fallback={<LoadingOverlay show message="Cargando aplicación..." />}>
             <Routes>
+              {/* Ruta raíz redirecciona a /home */}
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              
               {/* Rutas públicas */}
               {routes
                 .filter(route => route.public)

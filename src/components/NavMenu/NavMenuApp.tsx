@@ -212,39 +212,42 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
             {!isCollapsed && import.meta.env.DEV && renderDebugInfo()}
           
             <ul className="menu-list" style={{ padding: 0 }}>
-              {/* Menú Básico - Siempre visible para todos los usuarios */}
-              <MenuSection>
-                <MenuItem 
-                  to="/" 
-                  label={
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                      </svg>
-                      Inicio
-                    </span>
-                  }
-                  onClick={() => handleMenuClick('/', "Inicio")} 
-                  isActive={isPathActive('/')}
-                />
-                <MenuItem 
-                  to="/profile" 
-                  label="Mi Perfil" 
-                  onClick={() => handleMenuClick('/profile', "Mi Perfil")} 
-                  isActive={isPathActive('/profile')}
-                />
-              </MenuSection>
+            // src/components/NavMenu/NavMenuApp.tsx (fragmento actualizado)
+// Reemplazar la sección del menú básico por esto:
+
+{/* Menú Básico - Siempre visible para todos los usuarios */}
+<MenuSection>
+  <MenuItem 
+    to="/home" 
+    label={
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="16" 
+          height="16" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        Inicio
+      </span>
+    }
+    onClick={() => handleMenuClick('/home', "Inicio")} 
+    isActive={isPathActive('/home')}
+  />
+  <MenuItem 
+    to="/profile" 
+    label="Mi Perfil" 
+    onClick={() => handleMenuClick('/profile', "Mi Perfil")} 
+    isActive={isPathActive('/profile')}
+  />
+</MenuSection>
 
               {/* Menú de Administración - Visible para todos los usuarios */}
               <MenuSection title="Administración">

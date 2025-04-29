@@ -1,3 +1,4 @@
+// src/routes/PublicRoute.tsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +11,7 @@ interface PublicRouteProps {
 
 export const PublicRoute: React.FC<PublicRouteProps> = ({
   children,
-  redirectPath = '/'
+  redirectPath = '/home' // Cambiado de '/' a '/home'
 }) => {
   const { isSignedIn, isInitializing } = useAuth();
 
