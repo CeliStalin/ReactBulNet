@@ -144,6 +144,7 @@ class Logger {
   private sendToExternalService(entry: LogEntry): void {
     // Aquí se implementa la integración con un servicio de logging externo
     // como Sentry, LogRocket, etc.
+    console.log('Log externo pendiente de implementar:', entry.level, entry.message);
   }
 }
 

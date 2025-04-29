@@ -108,6 +108,7 @@ export class AuthProvider {
       
       for (const account of accounts) {
         // Solo intentamos limpiar aquí, no hacemos logout todavía
+        console.log(`Limpiando cuenta: ${account.username}`);
         instance.setActiveAccount(null);
       }
     } catch (error) {
@@ -146,6 +147,9 @@ export class AuthProvider {
           redirectUri: msalConfig.auth.redirectUri,
           prompt: 'select_account' // Forzar selección de cuenta
         });
+        
+        console.log('Login exitoso con respuesta:', loginResponse);
+
       }
     } catch (error) {
       console.error('Error durante login:', error);

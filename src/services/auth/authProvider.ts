@@ -114,14 +114,6 @@ export class AuthProvider {
     try {
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
-      const instance = await getMsalInstance();
-      
-      const loginResponse = await instance.loginPopup({
-        ...loginRequest,
-        redirectUri: window.location.origin,
-        prompt: 'select_account' // Forzar selección de cuenta
-      });
-      
     } catch (error) {
       throw error;
     }
