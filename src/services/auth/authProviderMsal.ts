@@ -1,4 +1,4 @@
-// Implementación mejorada usando MSAL directamente
+// src/services/auth/authProviderMsal.ts
 import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo, PopupRequest, RedirectRequest } from '@azure/msal-browser';
 
 // Configuración de MSAL
@@ -6,7 +6,7 @@ const msalConfig: Configuration = {
   auth: {
     clientId: import.meta.env.VITE_APP_CLIENT_ID || '',
     authority: import.meta.env.VITE_APP_AUTHORITY || '',
-    // Usar la URI configurada en Azure
+    // Usar la ruta /login explícitamente como se hacía antes
     redirectUri: `${window.location.origin}/login`,
     postLogoutRedirectUri: window.location.origin,
     navigateToLoginRequestUrl: true,
@@ -26,6 +26,7 @@ const loginRequest: PopupRequest | RedirectRequest = {
 // Crear e inicializar la instancia de MSAL
 let msalInstance: PublicClientApplication | null = null;
 let initializationPromise: Promise<void> | null = null;
+let useRedirectFlow = false; // Nuevo flag para controlar el flujo
 
 // Inicializar MSAL como una promesa
 function initializeMsal(): Promise<void> {
@@ -43,6 +44,15 @@ function initializeMsal(): Promise<void> {
           redirectUri: msalConfig.auth.redirectUri,
           authority: msalConfig.auth.authority
         });
+
+        // Intentar determinar si venimos de un flujo de redirección
+        // Esto ayudará a mantener consistencia entre loginRedirect y logoutRedirect
+        const cachedAuthMethod = sessionStorage.getItem('authMethod');
+        if (cachedAuthMethod === 'redirect') {
+          useRedirectFlow = true;
+          console.log('Usando flujo de redirección basado en sesión anterior');
+        }
+
       } catch (error) {
         console.error('Error al inicializar MSAL:', error);
         msalInstance = null;
@@ -107,14 +117,25 @@ export class AuthProvider {
       const accounts = instance.getAllAccounts();
       
       for (const account of accounts) {
-        await instance.logoutRedirect({
-          account: account,
-          postLogoutRedirectUri: window.location.origin
-        });
+        // Solo intentamos limpiar aquí, no hacemos logout todavía
+        instance.setActiveAccount(null);
       }
     } catch (error) {
       console.error('Error al limpiar cuentas:', error);
     }
+  }
+
+  // Método para establecer el tipo de flujo (popup o redirect)
+  public static setUseRedirectFlow(value: boolean): void {
+    useRedirectFlow = value;
+    // Guardar en sessionStorage para mantener consistencia entre navegaciones
+    sessionStorage.setItem('authMethod', value ? 'redirect' : 'popup');
+    console.log(`Flujo de autenticación establecido a: ${value ? 'redirect' : 'popup'}`);
+  }
+
+  // Método para obtener el tipo de flujo actual
+  public static isUsingRedirectFlow(): boolean {
+    return useRedirectFlow;
   }
 
   // Iniciar sesión
@@ -123,24 +144,35 @@ export class AuthProvider {
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
       const instance = await getMsalInstance();
-      console.log('Iniciando loginPopup con redirectUri:', msalConfig.auth.redirectUri);
       
-      const loginResponse = await instance.loginPopup({
-        ...loginRequest,
-        redirectUri: msalConfig.auth.redirectUri,
-        prompt: 'select_account' // Forzar selección de cuenta
-      });
-      
-      console.log('Login exitoso:', loginResponse);
+      if (useRedirectFlow) {
+        console.log('Iniciando loginRedirect con redirectUri:', msalConfig.auth.redirectUri);
+        await instance.loginRedirect({
+          ...loginRequest,
+          redirectUri: msalConfig.auth.redirectUri,
+          prompt: 'select_account' // Forzar selección de cuenta
+        });
+      } else {
+        console.log('Iniciando loginPopup con redirectUri:', msalConfig.auth.redirectUri);
+        const loginResponse = await instance.loginPopup({
+          ...loginRequest,
+          redirectUri: msalConfig.auth.redirectUri,
+          prompt: 'select_account' // Forzar selección de cuenta
+        });
+        console.log('Login exitoso:', loginResponse);
+      }
     } catch (error) {
       console.error('Error durante login:', error);
       throw error;
     }
   }
 
-  // Método alternativo usando redirección en lugar de popup
+  // Método específico para login con redirección
   public static async loginRedirect(): Promise<void> {
     try {
+      // Establecer el flujo como redirección para todas las operaciones futuras
+      this.setUseRedirectFlow(true);
+      
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
       const instance = await getMsalInstance();
@@ -179,10 +211,63 @@ export class AuthProvider {
           postLogoutRedirectUri: window.location.origin
         };
         
-        await instance.logoutPopup(logoutRequest);
+        // Usar el mismo tipo de flujo que se utilizó para el inicio de sesión
+        if (useRedirectFlow) {
+          console.log('Usando logoutRedirect para consistencia con loginRedirect');
+          await instance.logoutRedirect(logoutRequest);
+        } else {
+          console.log('Usando logoutPopup');
+          await instance.logoutPopup(logoutRequest);
+        }
+      } else {
+        console.warn('No hay cuenta activa para cerrar sesión');
+        // Limpieza manual de caché
+        sessionStorage.clear();
+        localStorage.removeItem('isLogin');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('usuarioAD');
+        localStorage.removeItem('roles');
       }
     } catch (error) {
       console.error('Error durante logout:', error);
+      throw error;
+    }
+  }
+
+  // Método específico para logout con redirección
+  public static async logoutRedirect(): Promise<void> {
+    try {
+      const instance = await getMsalInstance();
+      const account = await this.getActiveAccount();
+      
+      if (account) {
+        const logoutRequest = {
+          account: account,
+          postLogoutRedirectUri: window.location.origin
+        };
+        
+        console.log('Ejecutando logoutRedirect con postLogoutRedirectUri:', window.location.origin);
+        await instance.logoutRedirect(logoutRequest);
+      } else {
+        console.warn('No hay cuenta activa para cerrar sesión');
+        // Limpieza manual de caché
+        sessionStorage.clear();
+        localStorage.removeItem('isLogin');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('usuarioAD');
+        localStorage.removeItem('roles');
+        // Redirigir manualmente
+        window.location.href = window.location.origin;
+      }
+    } catch (error) {
+      console.error('Error durante logoutRedirect:', error);
+      // Intentar limpieza manual y redirección si falla el logout normal
+      sessionStorage.clear();
+      localStorage.removeItem('isLogin');
+      localStorage.removeItem('usuario');
+      localStorage.removeItem('usuarioAD');
+      localStorage.removeItem('roles');
+      window.location.href = window.location.origin;
       throw error;
     }
   }
@@ -206,10 +291,17 @@ export class AuthProvider {
         const response: AuthenticationResult = await instance.acquireTokenSilent(tokenRequest);
         return response.accessToken;
       } catch (silentError) {
-        // Si falla la adquisición silenciosa, intentar con popup
-        console.warn('Silent token acquisition failed, falling back to popup', silentError);
-        const response = await instance.acquireTokenPopup(tokenRequest);
-        return response.accessToken;
+        // Si falla la adquisición silenciosa, intentar con popup o redirect según el flujo actual
+        console.warn('Silent token acquisition failed, falling back to interactive method', silentError);
+        
+        if (useRedirectFlow) {
+          // Si estamos en flujo de redirección, no podemos esperar una respuesta inmediata
+          await instance.acquireTokenRedirect(tokenRequest);
+          throw new Error('Redirect in progress for token acquisition');
+        } else {
+          const response = await instance.acquireTokenPopup(tokenRequest);
+          return response.accessToken;
+        }
       }
     } catch (error) {
       console.error('Error al obtener access token:', error);

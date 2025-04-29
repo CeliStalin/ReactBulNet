@@ -36,6 +36,23 @@ const Login: React.FC = () => {
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [redirectMethodUsed, setRedirectMethodUsed] = useState<boolean>(() => {
+    // Verificar si ya está guardado en sessionStorage
+    const savedMethod = sessionStorage.getItem('authMethod');
+    return savedMethod === 'redirect';
+  });
+
+  // Al montar el componente, verificar si hay un parámetro en la URL que indique redirección
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const fromRedirect = queryParams.get('fromRedirect') === 'true';
+    
+    if (fromRedirect && !redirectMethodUsed) {
+      console.log('Detectada redirección en la URL. Configurando método a redirect');
+      setRedirectMethodUsed(true);
+      AuthProvider.setUseRedirectFlow(true);
+    }
+  }, [location.search, redirectMethodUsed]);
 
   // Limpiar cache al cargar
   useEffect(() => {
@@ -44,11 +61,14 @@ const Login: React.FC = () => {
       if (!isSignedIn && !isInitializing) {
         try {
           // Intentar limpiar sesiones previas (opcional)
-          sessionStorage.clear();
-          localStorage.removeItem('isLogin');
-          localStorage.removeItem('usuario');
-          localStorage.removeItem('usuarioAD');
-          localStorage.removeItem('roles');
+          if (!redirectMethodUsed) {
+            // Solo limpiar localStorage/sessionStorage si no estamos en medio de un flujo de redirección
+            // ya que podríamos estar volviendo de una redirección de autenticación
+            sessionStorage.removeItem('isLogin');
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('usuarioAD');
+            localStorage.removeItem('roles');
+          }
           
           // Limpiar cuentas en MSAL
           await AuthProvider.clearAccounts();
@@ -59,7 +79,7 @@ const Login: React.FC = () => {
     };
     
     clearSessions();
-  }, [isSignedIn, isInitializing]);
+  }, [isSignedIn, isInitializing, redirectMethodUsed]);
 
   // Redirigir si ya está autenticado
   useEffect(() => {
@@ -72,21 +92,26 @@ const Login: React.FC = () => {
     }
   }, [isSignedIn, isInitializing, loading, navigate, location]);
 
+  // Manejar el login utilizando popup
   const handleLogin = async () => {
     setIsLoggingIn(true);
     setLocalError(null);
     
     try {
-      console.log('Iniciando login desde componente Login...');
+      console.log('Iniciando login desde componente Login con POPUP...');
+      
+      // Configurar para usar el método de popup
+      AuthProvider.setUseRedirectFlow(false);
+      setRedirectMethodUsed(false);
       
       // Limpiar sessionStorage para forzar una autenticación limpia
       sessionStorage.clear();
       
-      // Usar loginPopup con prompt="select_account"
+      // Usar loginPopup
       await AuthProvider.login();
       
       // Si llegamos aquí, el login fue exitoso
-      console.log('Login completado en componente Login');
+      console.log('Login con POPUP completado en componente Login');
     } catch (error) {
       console.error('Error durante login en componente Login:', error);
       setLocalError(error instanceof Error ? error.message : String(error));
@@ -95,7 +120,7 @@ const Login: React.FC = () => {
     }
   };
 
-  // Función alternativa que usa redirección en lugar de popup
+  // Función que usa redirección para login
   const handleLoginRedirect = async () => {
     setIsLoggingIn(true);
     setLocalError(null);
@@ -103,10 +128,17 @@ const Login: React.FC = () => {
     try {
       console.log('Iniciando login redirect desde componente Login...');
       
+      // Configurar para usar el método de redirección
+      AuthProvider.setUseRedirectFlow(true);
+      setRedirectMethodUsed(true);
+      
       // Limpiar sessionStorage para forzar una autenticación limpia
       sessionStorage.clear();
       
-      // Usar loginRedirect en lugar de loginPopup
+      // Establecer en sessionStorage que estamos usando el método de redirección
+      sessionStorage.setItem('authMethod', 'redirect');
+      
+      // Usar loginRedirect
       await AuthProvider.loginRedirect();
       
       // La navegación se maneja automáticamente por redireccionamiento
@@ -114,6 +146,24 @@ const Login: React.FC = () => {
       console.error('Error durante login redirect en componente Login:', error);
       setLocalError(error instanceof Error ? error.message : String(error));
       setIsLoggingIn(false);
+    }
+  };
+
+  // Función específica para manejar el logout teniendo en cuenta el método utilizado
+  const handleLogout = async () => {
+    try {
+      console.log('Iniciando logout desde componente Login...');
+      console.log('Método utilizado para autenticación:', redirectMethodUsed ? 'redirect' : 'popup');
+      
+      // Usar método adecuado según cómo se autenticó
+      if (redirectMethodUsed) {
+        await AuthProvider.logoutRedirect();
+      } else {
+        await logout();
+      }
+    } catch (error) {
+      console.error('Error durante logout en componente Login:', error);
+      setLocalError(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -193,7 +243,7 @@ const Login: React.FC = () => {
                           <button 
                             className="button is-fullwidth"
                             style={styles.primaryButton}
-                            onClick={logout}
+                            onClick={handleLogout}
                             disabled={loading}
                           >
                             Cerrar sesión
@@ -219,6 +269,8 @@ const Login: React.FC = () => {
 isInitializing: ${isInitializing}
 loading: ${loading}
 isLoggingIn: ${isLoggingIn}
+redirectMethodUsed: ${redirectMethodUsed}
+authMethod: ${sessionStorage.getItem('authMethod')}
 redirectUri: ${window.location.origin}
 pathname: ${location.pathname}
 `}

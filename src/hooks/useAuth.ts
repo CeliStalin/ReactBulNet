@@ -220,9 +220,24 @@ export const useAuth = (): UseAuthReturn => {
     try {
       console.log('[useAuth] Iniciando proceso de logout...');
       setLoading(true);
-      await AuthProvider.logout();
       
-      // Limpiar estados
+      // Determinar si estamos usando el flujo de redirección
+      const isRedirectFlow = AuthProvider.isUsingRedirectFlow();
+      console.log('[useAuth] ¿Usando flujo de redirección?', isRedirectFlow);
+      
+      if (isRedirectFlow) {
+        // Logout con redirección
+        console.log('[useAuth] Ejecutando logoutRedirect');
+        await AuthProvider.logoutRedirect();
+        // No continuamos la ejecución aquí, ya que la redirección nos llevará a otra página
+        return;
+      } else {
+        // Logout normal
+        console.log('[useAuth] Ejecutando logout normal');
+        await AuthProvider.logout();
+      }
+      
+      // Limpiar estados (solo se ejecuta para logout normal, no redirect)
       setUsuario(null);
       setUsuarioAD(null);
       setRoles([]);
@@ -233,9 +248,23 @@ export const useAuth = (): UseAuthReturn => {
     } catch (err) {
       console.error('[useAuth] Error en proceso de logout:', err);
       setError(err instanceof Error ? err.message : String(err));
+      
+      // Limpieza manual en caso de error
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('isLogin');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('usuarioAD');
+        localStorage.removeItem('roles');
+        setIsSignedIn(false);
+      } catch (e) {
+        console.error('[useAuth] Error en limpieza manual:', e);
+      }
+      
       throw err;
     } finally {
       setLoading(false);
+      // Dar tiempo para que la redirección se complete o para mostrar mensaje de carga
       setTimeout(() => {
         setIsLoggingOut(false);
       }, 2000);

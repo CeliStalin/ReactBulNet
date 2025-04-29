@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IUser } from '../../interfaces/IUserAz';
 import useAuth from '../../hooks/useAuth';
+import { AuthProvider } from '../../services/auth/authProviderMsal';
 import logoutIcon from '../../assets/Group.png';
 
 const UserLoginApp: React.FC = () => {
@@ -8,6 +9,7 @@ const UserLoginApp: React.FC = () => {
   const [showInfo, setShowInfo] = useState<boolean>(false);
   const { logout, usuario, isLoggingOut } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [isProcessingLogout, setIsProcessingLogout] = useState<boolean>(false);
 
   useEffect(() => {
     if (usuario) {
@@ -44,6 +46,9 @@ const UserLoginApp: React.FC = () => {
   // Log de estado de logout
   useEffect(() => {
     console.log('[UserLoginApp] isLoggingOut:', isLoggingOut);
+    if (!isLoggingOut) {
+      setIsProcessingLogout(false);
+    }
   }, [isLoggingOut]);
 
   const handleToggleMenu = () => {
@@ -55,14 +60,43 @@ const UserLoginApp: React.FC = () => {
   
   const handleLogout = async () => {
     console.log('[UserLoginApp] Botón logout clickeado');
+    // Evitar múltiples clicks
+    if (isProcessingLogout || isLoggingOut) {
+      console.log('[UserLoginApp] Operación de logout ya en progreso, ignorando click');
+      return;
+    }
+    
+    setIsProcessingLogout(true);
     setLocalUserData(null);
     setShowInfo(false);
+    
     try {
-      // Esperar a que logout complete
-      await logout();
-      console.log('[UserLoginApp] Logout completado');
+      // Verificar método de autenticación usado
+      const authMethod = sessionStorage.getItem('authMethod');
+      console.log('[UserLoginApp] Método de autenticación detectado:', authMethod);
+      
+      if (authMethod === 'redirect') {
+        // Si usamos redirección para login, usar redirección para logout
+        console.log('[UserLoginApp] Ejecutando logoutRedirect');
+        await AuthProvider.logoutRedirect();
+      } else {
+        // Si no, usar el método normal
+        console.log('[UserLoginApp] Ejecutando logout normal');
+        await logout();
+      }
     } catch (error) {
       console.error('[UserLoginApp] Error en logout:', error);
+      // Incluso si hay un error, intentar limpiar datos locales
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('isLogin');
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('usuarioAD');
+        localStorage.removeItem('roles');
+      } catch (e) {
+        console.error('[UserLoginApp] Error al limpiar datos locales:', e);
+      }
+      setIsProcessingLogout(false);
     }
   };
 
@@ -126,23 +160,23 @@ const UserLoginApp: React.FC = () => {
 
       <button
         onClick={handleLogout}
-        disabled={isLoggingOut}
+        disabled={isProcessingLogout || isLoggingOut}
         style={{
           backgroundColor: 'transparent',
           border: 'none',
           padding: '6px 12px',
           color: 'white',
           fontSize: '0.9rem',
-          cursor: isLoggingOut ? 'wait' : 'pointer',
+          cursor: (isProcessingLogout || isLoggingOut) ? 'wait' : 'pointer',
           fontWeight: 'bold',
           transition: 'all 0.3s ease',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          opacity: isLoggingOut ? 0.7 : 1
+          opacity: (isProcessingLogout || isLoggingOut) ? 0.7 : 1
         }}
         onMouseOver={(e) => {
-          if (!isLoggingOut) {
+          if (!isProcessingLogout && !isLoggingOut) {
             e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
           }
         }}
@@ -158,7 +192,7 @@ const UserLoginApp: React.FC = () => {
             height: '30px',
           }}
         />
-        {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        {isProcessingLogout || isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
       </button>
 
       {showInfo && effectiveUserData && (

@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider as MsalAuthProvider } from './services/auth/authProviderMsal';
 import { AuthProvider } from './context/AuthContext';
@@ -22,6 +22,9 @@ const ErrorFallback = () => (
 );
 
 const App: React.FC = () => {
+  const [isHandlingRedirect, setIsHandlingRedirect] = useState<boolean>(true);
+  const [redirectError, setRedirectError] = useState<string | null>(null);
+
   // Inicializar MSAL al cargar la aplicación
   useEffect(() => {
     const initMsal = async () => {
@@ -42,19 +45,80 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleRedirectPromise = async () => {
       try {
+        setIsHandlingRedirect(true);
+        console.log("Verificando si hay redirecciones pendientes...");
+        
         const response = await MsalAuthProvider.handleRedirectPromise();
         if (response) {
-          console.log('Se ha procesado una redirección de autenticación');
+          console.log('Se ha procesado una redirección de autenticación', response);
+          
+          // Determinar si es login o logout y guardar estado
+          const isLoginRedirect = response.account !== null;
+          if (isLoginRedirect) {
+            console.log('Redirección de login procesada correctamente');
+            localStorage.setItem('isLogin', 'true');
+            sessionStorage.setItem('authMethod', 'redirect');
+          } else {
+            console.log('Redirección de logout procesada correctamente');
+          }
+        } else {
+          console.log('No hay redirecciones pendientes');
         }
       } catch (error) {
         // Evitamos imprimir el objeto de error directamente
-        console.error('Error al manejar redirección de autenticación:', 
-          error instanceof Error ? error.message : 'Error desconocido');
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        console.error('Error al manejar redirección de autenticación:', errorMessage);
+        setRedirectError(errorMessage);
+      } finally {
+        setIsHandlingRedirect(false);
       }
     };
     
     handleRedirectPromise();
   }, []);
+
+  // Mostrar loading mientras se maneja la redirección
+  if (isHandlingRedirect) {
+    return (
+      <div style={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        padding: '20px',
+        textAlign: 'center'
+      }}>
+        <LoadingOverlay show message="Verificando sesión..." />
+        {redirectError && (
+          <div style={{ 
+            marginTop: '20px', 
+            color: 'red',
+            padding: '10px',
+            border: '1px solid red',
+            borderRadius: '5px',
+            background: 'rgba(255,0,0,0.1)'
+          }}>
+            <p>Error al procesar la autenticación: {redirectError}</p>
+            <button 
+              onClick={() => window.location.href = '/login'}
+              style={{
+                marginTop: '10px',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '4px',
+                background: '#04A59B',
+                color: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Volver a intentar
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary fallback={<ErrorFallback />}>
