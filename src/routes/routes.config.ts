@@ -7,7 +7,7 @@ const MainPage = lazy(() => import('../components/MainPage'));
 const Dashboard = lazy(() => import('../components/Dashboard/DashboardPage')); 
 const IngresoHerederos = lazy(() => import('../components/IngresoHerederos/IngresoHerederos'));
 const IngresoDocumentos = lazy(() => import('../components/IngresoDocumentos/IngresoDocumentos'));
-const NotFound = lazy(() => import('../components/NotFound'));
+const NotFound = lazy(() => import('../components/NotFound')); 
 const Unauthorized = lazy(() => import('../components/Unauthorized'));
 const HomePage = lazy(() => import('../components/HomePage')); 
 
@@ -45,8 +45,6 @@ export const routes: RouteConfig[] = [
     component: Dashboard,
     roles: ['ADMIN', 'Developers'],
   },
-  
-  // IMPORTANTE: Asegurarse que estas rutas coincidan exactamente con las usadas en el menú
   {
     path: '/MnHerederos/ingresoHer',
     component: IngresoHerederos,

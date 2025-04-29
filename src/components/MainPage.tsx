@@ -1,21 +1,14 @@
 import React from "react";
-import { Layout } from "./Layout/Layout";  
+import { Layout } from "./Layout/Layout";
 
-const Mainpage: React.FC = () => {
+const HomePage: React.FC = () => {
   return (
-    <Layout>
-      <div className="content-container" style={{ minHeight: '400px' }}>
-        <div className="content">
-          <h1 className="title">Bienvenido a Consalud</h1>
-          <p className="subtitle">Sistema de Administración de Herederos</p>
-          
-          <div className="box">
-            <p>Seleccione una opción del menú para comenzar.</p>
-          </div>
-        </div>
+    <Layout pageTitle="Inicio">
+      <div className="content-container" style={{ minHeight: '400px', backgroundColor: '#ffffff' }}>
+        {/* Página de inicio completamente vacía, solo con fondo blanco */}
       </div>
     </Layout>
   );
 };
 
-export { Mainpage };
+export default HomePage;
