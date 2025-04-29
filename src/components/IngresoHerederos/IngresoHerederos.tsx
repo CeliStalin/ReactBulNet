@@ -9,9 +9,9 @@ const IngresoHerederos: React.FC = () => {
   const handleSearch = async (rut: string) => {
     setLoading(true);
     try {
-      console.log('Buscando RUT:', rut);
+
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       setSearchResult({
         rut,
         nombre: 'Juan Pérez',

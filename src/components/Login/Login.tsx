@@ -1,4 +1,3 @@
-// src/components/Login/Login.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -47,7 +46,6 @@ const Login: React.FC = () => {
     const fromRedirect = queryParams.get('fromRedirect') === 'true';
     
     if (fromRedirect && !redirectMethodUsed) {
-      console.log('Detectada redirección en la URL. Configurando método a redirect');
       setRedirectMethodUsed(true);
       AuthProvider.setUseRedirectFlow(true);
     }
@@ -83,7 +81,6 @@ const Login: React.FC = () => {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isSignedIn && !isInitializing && !loading) {
-      console.log('Usuario autenticado, redirigiendo...');
       const state = location.state as LocationState;
       // Cambiado: redirigir a /home por defecto en lugar de /
       const from = state?.from?.pathname || '/home';
@@ -97,8 +94,7 @@ const Login: React.FC = () => {
     setLocalError(null);
     
     try {
-      console.log('Iniciando login redirect desde componente Login...');
-      
+
       // Configurar para usar el método de redirección
       AuthProvider.setUseRedirectFlow(true);
       setRedirectMethodUsed(true);
@@ -123,8 +119,6 @@ const Login: React.FC = () => {
   // Función específica para manejar el logout teniendo en cuenta el método utilizado
   const handleLogout = async () => {
     try {
-      console.log('Iniciando logout desde componente Login...');
-      console.log('Método utilizado para autenticación:', redirectMethodUsed ? 'redirect' : 'popup');
       
       // Usar método adecuado según cómo se autenticó
       if (redirectMethodUsed) {

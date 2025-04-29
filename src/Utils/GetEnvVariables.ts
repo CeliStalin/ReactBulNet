@@ -3,19 +3,16 @@ import { FetchTimeoutOptions } from '../interfaces/IFectTimeOutOptions'
 
 const GetAmbiente = ():string => {
     const ambiente = import.meta.env.VITE_AMBIENTE || import.meta.env.VITE_APP_AMBIENTE;
-    console.log('[GetEnvVariables] Ambiente:', ambiente);
     return ambiente!;
 };
 
 const GetApiArquitectura = ():string => {
     const apiUrl = import.meta.env.VITE_API_ARQUITECTURA_URL || import.meta.env.VITE_APP_API_ARQUITECTURA_URL;
-    console.log('[GetEnvVariables] API Arquitectura URL:', apiUrl);
     return apiUrl;
 };
 
 const GetNameApiKey = ():string => {
     const apiKeyName = import.meta.env.VITE_NAME_API_KEY || import.meta.env.VITE_APP_NAME_API_KEY;
-    console.log('[GetEnvVariables] Nombre API Key:', apiKeyName);
     return apiKeyName!;
 };
 
@@ -30,7 +27,6 @@ const GetSistema = ():Sistema => {
         codigo: import.meta.env.VITE_SISTEMA! || import.meta.env.VITE_APP_SISTEMA!,
         nombre: import.meta.env.VITE_NOMBRE_SISTEMA! || import.meta.env.VITE_APP_NOMBRE_SISTEMA!,
     };
-    console.log('[GetEnvVariables] Sistema:', sistema);
     return sistema;
 }
 
@@ -40,9 +36,6 @@ const FetchWithTimeout = async (resource: RequestInfo | URL,
     const defaultTimeout = Number(import.meta.env.VITE_TIMEOUT || import.meta.env.VITE_APP_TIMEOUT) || 10000;
     const { timeout = defaultTimeout, ...fetchOptions } = options;
     
-    console.log(`[FetchWithTimeout] Realizando petición a: ${resource.toString()}`);
-    console.log(`[FetchWithTimeout] Timeout configurado: ${timeout}ms`);
-    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
                             
@@ -51,8 +44,6 @@ const FetchWithTimeout = async (resource: RequestInfo | URL,
                                 ...fetchOptions,
                                 signal: controller.signal,
                           });
-        
-        console.log(`[FetchWithTimeout] Respuesta recibida: ${response.status} ${response.statusText}`);
         return response;
     } catch (error) {
         const errorMessage = (error as Error).name === 'AbortError' 

@@ -30,14 +30,10 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
   useEffect(() => {
     const checkRoles = () => {
       if (!isSignedIn || !roles || roles.length === 0) {
-        console.log('[RoleProtectedRoute] Usuario no autenticado o sin roles');
         setHasPermission(false);
         return;
       }
 
-      console.log('[RoleProtectedRoute] Verificando roles:', allowedRoles);
-      console.log('[RoleProtectedRoute] Roles del usuario:', roles.map(r => r.Rol));
-      
       // Verificar si el usuario tiene alguno de los roles permitidos
       const userRoles = roles.map(role => role.Rol);
       
@@ -51,9 +47,6 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
       );
       
       const hasRoleFromHook = hasAnyRole(allowedRoles);
-      
-      console.log('[RoleProtectedRoute] ¿Tiene algún rol permitido?', hasRole);
-      console.log('[RoleProtectedRoute] ¿Tiene rol según hook?', hasRoleFromHook);
       
       // Si alguna de las dos verificaciones es positiva, permitir acceso
       setHasPermission(hasRole || hasRoleFromHook);
@@ -137,18 +130,15 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({ element, allowe
 
   // Redirección inmediata a login si no está autenticado
   if (!isSignedIn) {
-    console.log('[RoleProtectedRoute] Usuario no autenticado, redirigiendo a login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Redirección si no tiene permisos
   if (!hasPermission) {
-    console.log('[RoleProtectedRoute] Usuario sin permisos, redirigiendo a unauthorized');
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
 
   // Solo renderizar el elemento si está autenticado y tiene permisos
-  console.log('[RoleProtectedRoute] Usuario autenticado y con permisos, mostrando contenido');
   return <>{element}</>;
 };
 

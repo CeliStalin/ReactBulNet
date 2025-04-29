@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider as MsalAuthProvider } from './services/auth/authProviderMsal';
@@ -30,8 +29,8 @@ const App: React.FC = () => {
     const initMsal = async () => {
       try {
         await MsalAuthProvider.initialize();
-        console.log("MSAL inicializado correctamente en App");
-      } catch (error) {
+        ("MSAL inicializado correctamente en App");
+      } catch (error) {console.log
         // Evitamos imprimir el objeto de error directamente
         console.error("Error al inicializar MSAL en App:", 
           error instanceof Error ? error.message : 'Error desconocido');
@@ -46,26 +45,23 @@ const App: React.FC = () => {
     const handleRedirectPromise = async () => {
       try {
         setIsHandlingRedirect(true);
-        console.log("Verificando si hay redirecciones pendientes...");
+        ("Verificando si hay redirecciones pendientes...");
         
         const response = await MsalAuthProvider.handleRedirectPromise();
         if (response) {
-          console.log('Se ha procesado una redirección de autenticación', response);
           
           // Determinar si es login o logout y guardar estado
           const isLoginRedirect = response.account !== null;
           if (isLoginRedirect) {
-            console.log('Redirección de login procesada correctamente');
             localStorage.setItem('isLogin', 'true');
             sessionStorage.setItem('authMethod', 'redirect');
           } else {
-            console.log('Redirección de logout procesada correctamente');
           }
         } else {
-          console.log('No hay redirecciones pendientes');
         }
       } catch (error) {
-        // Evitamos imprimir el objeto de error directamente
+
+     // Evitamos imprimir el objeto de error directamente
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
         console.error('Error al manejar redirección de autenticación:', errorMessage);
         setRedirectError(errorMessage);

@@ -1,4 +1,3 @@
-// src/services/auth/authProviderMsal.ts
 import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo, PopupRequest, RedirectRequest } from '@azure/msal-browser';
 
 // Configuración de MSAL
@@ -36,21 +35,12 @@ function initializeMsal(): Promise<void> {
         msalInstance = new PublicClientApplication(msalConfig);
         // Importante: esperar a que MSAL se inicialice completamente
         await msalInstance.initialize();
-        console.log('MSAL inicializado correctamente');
         
-        // Para facilitar la depuración
-        console.log('Config MSAL:', {
-          clientId: msalConfig.auth.clientId,
-          redirectUri: msalConfig.auth.redirectUri,
-          authority: msalConfig.auth.authority
-        });
 
-        // Intentar determinar si venimos de un flujo de redirección
         // Esto ayudará a mantener consistencia entre loginRedirect y logoutRedirect
         const cachedAuthMethod = sessionStorage.getItem('authMethod');
         if (cachedAuthMethod === 'redirect') {
           useRedirectFlow = true;
-          console.log('Usando flujo de redirección basado en sesión anterior');
         }
 
       } catch (error) {
@@ -130,7 +120,6 @@ export class AuthProvider {
     useRedirectFlow = value;
     // Guardar en sessionStorage para mantener consistencia entre navegaciones
     sessionStorage.setItem('authMethod', value ? 'redirect' : 'popup');
-    console.log(`Flujo de autenticación establecido a: ${value ? 'redirect' : 'popup'}`);
   }
 
   // Método para obtener el tipo de flujo actual
@@ -146,20 +135,17 @@ export class AuthProvider {
       const instance = await getMsalInstance();
       
       if (useRedirectFlow) {
-        console.log('Iniciando loginRedirect con redirectUri:', msalConfig.auth.redirectUri);
         await instance.loginRedirect({
           ...loginRequest,
           redirectUri: msalConfig.auth.redirectUri,
           prompt: 'select_account' // Forzar selección de cuenta
         });
       } else {
-        console.log('Iniciando loginPopup con redirectUri:', msalConfig.auth.redirectUri);
         const loginResponse = await instance.loginPopup({
           ...loginRequest,
           redirectUri: msalConfig.auth.redirectUri,
           prompt: 'select_account' // Forzar selección de cuenta
         });
-        console.log('Login exitoso:', loginResponse);
       }
     } catch (error) {
       console.error('Error durante login:', error);
@@ -176,7 +162,6 @@ export class AuthProvider {
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
       const instance = await getMsalInstance();
-      console.log('Iniciando loginRedirect con redirectUri:', msalConfig.auth.redirectUri);
       await instance.loginRedirect({
         ...loginRequest,
         redirectUri: msalConfig.auth.redirectUri,
@@ -213,10 +198,8 @@ export class AuthProvider {
         
         // Usar el mismo tipo de flujo que se utilizó para el inicio de sesión
         if (useRedirectFlow) {
-          console.log('Usando logoutRedirect para consistencia con loginRedirect');
           await instance.logoutRedirect(logoutRequest);
         } else {
-          console.log('Usando logoutPopup');
           await instance.logoutPopup(logoutRequest);
         }
       } else {
@@ -246,7 +229,6 @@ export class AuthProvider {
           postLogoutRedirectUri: window.location.origin
         };
         
-        console.log('Ejecutando logoutRedirect con postLogoutRedirectUri:', window.location.origin);
         await instance.logoutRedirect(logoutRequest);
       } else {
         console.warn('No hay cuenta activa para cerrar sesión');

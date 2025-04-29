@@ -1,4 +1,4 @@
-// Implementación mejorada usando MSAL directamente
+// Implementación MSAL directamente
 import { PublicClientApplication, Configuration, AuthenticationResult, AccountInfo, PopupRequest, RedirectRequest } from '@azure/msal-browser';
 
 // Configuración de MSAL
@@ -34,14 +34,7 @@ function initializeMsal(): Promise<void> {
         msalInstance = new PublicClientApplication(msalConfig);
         // Importante: esperar a que MSAL se inicialice completamente
         await msalInstance.initialize();
-        console.log('MSAL inicializado correctamente');
         
-        // Para facilitar la depuración
-        console.log('Config MSAL:', {
-          clientId: msalConfig.auth.clientId,
-          redirectUri: msalConfig.auth.redirectUri,
-          authority: msalConfig.auth.authority
-        });
       } catch (error) {
         console.error('Error al inicializar MSAL:', error);
         msalInstance = null;
@@ -122,7 +115,6 @@ export class AuthProvider {
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
       const instance = await getMsalInstance();
-      console.log('Iniciando loginPopup con redirectUri:', window.location.origin);
       
       const loginResponse = await instance.loginPopup({
         ...loginRequest,
@@ -130,9 +122,7 @@ export class AuthProvider {
         prompt: 'select_account' // Forzar selección de cuenta
       });
       
-      console.log('Login exitoso:', loginResponse);
     } catch (error) {
-      console.error('Error durante login:', error);
       throw error;
     }
   }
@@ -143,7 +133,6 @@ export class AuthProvider {
       await this.clearAccounts(); // Limpiar sesiones anteriores
       
       const instance = await getMsalInstance();
-      console.log('Iniciando loginRedirect con redirectUri:', window.location.origin);
       await instance.loginRedirect({
         ...loginRequest,
         redirectUri: window.location.origin,

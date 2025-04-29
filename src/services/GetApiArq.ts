@@ -10,8 +10,6 @@ import { ElementMenu } from '../interfaces/IMenusElementos'
 
 const ApiRoles = async(mail: string): Promise<RolResponse[]> => {
   const ApiUrl = `${GetApiArquitectura()}/Rol/mail/${mail}/app/${GetSistema().codigo}`;
-  console.log(`[ApiRoles] Consultando roles para ${mail} en URL: ${ApiUrl}`);
-  
   try {
       const Response = await FetchWithTimeout(ApiUrl, {
           method: "GET",
@@ -26,10 +24,8 @@ const ApiRoles = async(mail: string): Promise<RolResponse[]> => {
       }
       
       const Rawdata = await Response.json();
-      console.log(`[ApiRoles] Datos crudos recibidos:`, Rawdata);
       
       const formattedData: RolResponse[] = mapRawArrayToRolResponseArray(Rawdata);
-      console.log(`[ApiRoles] Roles formateados:`, formattedData);
       
       return formattedData;
   } catch (ex) {
@@ -44,7 +40,6 @@ const ApiRoles = async(mail: string): Promise<RolResponse[]> => {
 
 const ApiGetUsuarioAd = async (mail: string): Promise<UsuarioAd > => {
     const Url = `${GetApiArquitectura()}/Usuario/mail/${mail}`;
-    console.log(`[ApiGetUsuarioAd] Consultando usuario para ${mail} en URL: ${Url}`);
     
     try {
       const Response = await FetchWithTimeout(Url, {
@@ -60,7 +55,6 @@ const ApiGetUsuarioAd = async (mail: string): Promise<UsuarioAd > => {
       }
       
       const rawData: RawUsuarioAD = await Response.json();
-      console.log(`[ApiGetUsuarioAd] Datos de usuario recibidos para ${mail}:`, rawData);
       
       return mapRawToUsuarioAd(rawData);
       
@@ -76,13 +70,10 @@ const ApiGetUsuarioAd = async (mail: string): Promise<UsuarioAd > => {
 
 const ApiGetMenus = async (rol :string) : Promise<ElementMenu[] | null>   =>  {
    if(!rol){
-    console.log('[ApiGetMenus] Rol vacío, no se pueden obtener menús');
     return null;
    }
    
    const Url = `${GetApiArquitectura()}/Elemento/${rol}/${GetSistema().codigo}`;
-   console.log(`[ApiGetMenus] Consultando menús para rol ${rol} en URL: ${Url}`);
-   console.log(`[ApiGetMenus] Sistema: ${GetSistema().codigo}`);
    
    try{
         const Response = await FetchWithTimeout(Url, {
@@ -98,11 +89,7 @@ const ApiGetMenus = async (rol :string) : Promise<ElementMenu[] | null>   =>  {
         }
         
         const rawData: RawMenusElemento[] = await Response.json();
-        console.log(`[ApiGetMenus] Menús crudos recibidos para rol ${rol}:`, rawData);
-        
         const menuItems = mapRawArrayToElementMenuArray(rawData);
-        console.log(`[ApiGetMenus] Menús procesados para rol ${rol}:`, menuItems);
-        
         return menuItems;
 
    } catch (ex) {
@@ -114,9 +101,6 @@ const ApiGetMenus = async (rol :string) : Promise<ElementMenu[] | null>   =>  {
     throw new Error(`Error al obtener roles para ${rol}: ${errorMessage}`);
   }
 }
-
-
-
 
 export {
     ApiRoles,

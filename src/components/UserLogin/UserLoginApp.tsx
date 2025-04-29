@@ -45,7 +45,6 @@ const UserLoginApp: React.FC = () => {
 
   // Log de estado de logout
   useEffect(() => {
-    console.log('[UserLoginApp] isLoggingOut:', isLoggingOut);
     if (!isLoggingOut) {
       setIsProcessingLogout(false);
     }
@@ -59,10 +58,9 @@ const UserLoginApp: React.FC = () => {
   const avatarSrc = effectiveUserData?.photo || 'https://www.gravatar.com/avatar?d=mp';
   
   const handleLogout = async () => {
-    console.log('[UserLoginApp] Botón logout clickeado');
+
     // Evitar múltiples clicks
     if (isProcessingLogout || isLoggingOut) {
-      console.log('[UserLoginApp] Operación de logout ya en progreso, ignorando click');
       return;
     }
     
@@ -73,20 +71,16 @@ const UserLoginApp: React.FC = () => {
     try {
       // Verificar método de autenticación usado
       const authMethod = sessionStorage.getItem('authMethod');
-      console.log('[UserLoginApp] Método de autenticación detectado:', authMethod);
       
       if (authMethod === 'redirect') {
         // Si usamos redirección para login, usar redirección para logout
-        console.log('[UserLoginApp] Ejecutando logoutRedirect');
         await AuthProvider.logoutRedirect();
       } else {
         // Si no, usar el método normal
-        console.log('[UserLoginApp] Ejecutando logout normal');
         await logout();
       }
     } catch (error) {
-      console.error('[UserLoginApp] Error en logout:', error);
-      // Incluso si hay un error, intentar limpiar datos locales
+      //  si hay un error, intentar limpiar datos locales
       try {
         sessionStorage.clear();
         localStorage.removeItem('isLogin');
