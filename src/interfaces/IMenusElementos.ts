@@ -16,7 +16,9 @@ interface ElementMenu{
     FuncionCreacion:string,
     UsuarioModificacion:string,
     FechaModificacion:Date,
-    FuncionModificacion:string
+    FuncionModificacion:string,
+    Rol?: string;  // Rol  para el menu aplicaciones
+    TipoRol?: string;  // Tipo de rol
 }
 export type{
     ElementMenu
