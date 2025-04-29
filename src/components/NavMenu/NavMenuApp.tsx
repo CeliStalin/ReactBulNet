@@ -23,7 +23,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   
   const prevPathRef = useRef(location.pathname);
 
-  // Verificar si el usuario tiene el rol Developers
+  // Verificar si el usuario tiene el rol 
   const hasDevelopersRole = useMemo(() => {
     return roles.some(role => role.Rol === "Developers");
   }, [roles]);
@@ -51,7 +51,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
           return;
         }
   
-        // Solo cargar menús si el usuario tiene el rol Developers
+        // Solo cargar menús si el usuario tiene el rol 
         if (hasDevelopersRole) {
           const items = await ApiGetMenus("Developers");
           // Filtrar los elementos problemáticos "IngresoDoc" e "IngresoHer"
@@ -131,7 +131,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     return null;
   }
 
-  // Opciones fijas para el menú de Herederos (estas son las que funcionan correctamente)
+  // Opciones para el menú de Herederos 
   const menuHerederos = [
     {
       path: "/MnHerederos/ingresoHer",

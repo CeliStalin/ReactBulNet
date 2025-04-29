@@ -1,4 +1,3 @@
-// src/components/Login/components/LoadingDots.tsx
 import React from 'react';
 
 interface LoadingDotsProps {

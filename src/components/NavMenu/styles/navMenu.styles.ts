@@ -5,14 +5,14 @@ export const navMenuStyles = {
     width: isCollapsed ? '50px' : '220px',
     position: 'fixed' as const,
     left: 0,
-    top: '4rem', // Ajustado para que comience después del header
+    top: '4rem', 
     height: 'calc(100vh - 4rem)',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Transición más suave
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
     zIndex: 100,
     padding: isCollapsed ? '0' : '1rem',
-    boxShadow: isCollapsed ? 'none' : '2px 0 5px rgba(0, 0, 0, 0.1)', // Añadir sombra cuando está expandido
+    boxShadow: isCollapsed ? 'none' : '2px 0 5px rgba(0, 0, 0, 0.1)', // Añade sombra cuando está expandido
   }),
   
   menuLabel: {
@@ -32,7 +32,7 @@ export const navMenuStyles = {
     width: '24px',
     height: '24px',
     transition: 'transform 0.3s ease',
-    transform: isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', // Añadir rotación al ícono
+    transform: isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)', // Añade rotación al ícono
   }),
   
   menuContent: (isCollapsed: boolean) => ({

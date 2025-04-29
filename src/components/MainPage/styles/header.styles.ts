@@ -7,7 +7,7 @@ export const headerStyles = {
   position: 'fixed' as const,
   top: 0,
   left: 0,
-  zIndex: 1000, // Aseguramos que el header esté por encima del menú
+  zIndex: 1000, 
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',

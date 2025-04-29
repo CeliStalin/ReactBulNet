@@ -17,7 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       width: isCollapsed ? '60px' : theme.layout.sidebarWidth,
       position: 'fixed' as const,
       left: 0,
-      top: '64px', // Header height
+      top: '64px', 
       height: 'calc(100vh - 64px)',
       backgroundColor: theme.colors.white,
       borderRight: `1px solid ${theme.colors.gray.light}`,

@@ -1,4 +1,3 @@
-// src/components/NavMenu/components/MenuSection.tsx
 import React, { useState } from 'react';
 import { navMenuStyles } from '../styles/navMenu.styles';
 

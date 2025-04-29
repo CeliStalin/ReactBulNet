@@ -21,7 +21,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px',
-      paddingTop: '80px', // Para compensar el header
+      paddingTop: '80px',
     },
   };
 

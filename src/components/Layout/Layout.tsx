@@ -48,7 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, pageTitle }) => {
           padding: "20px", 
           width: "100%",
           transition: "margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1)", // Igual animación que el menú
-          minHeight: 'calc(100vh - 4rem)' // Asegurar que ocupe todo el alto disponible
+          minHeight: 'calc(100vh - 4rem)' 
         }}>
           {children}
         </main>

@@ -35,12 +35,12 @@ const Login: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [redirectMethodUsed, setRedirectMethodUsed] = useState<boolean>(() => {
-    // Verificar si ya está guardado en sessionStorage
+    // Verifica si ya está guardado en sessionStorage
     const savedMethod = sessionStorage.getItem('authMethod');
     return savedMethod === 'redirect';
   });
 
-  // Al montar el componente, verificar si hay un parámetro en la URL que indique redirección
+  // Al montar el componente, verifica si hay un parámetro en la URL que indique redirección
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const fromRedirect = queryParams.get('fromRedirect') === 'true';
@@ -57,7 +57,7 @@ const Login: React.FC = () => {
     const clearSessions = async () => {
       if (!isSignedIn && !isInitializing) {
         try {
-          // Intentar limpiar sesiones previas (opcional)
+          // Intentar limpiar sesiones previas 
           if (!redirectMethodUsed) {
             // Solo limpiar localStorage/sessionStorage si no estamos en medio de un flujo de redirección
             // ya que podríamos estar volviendo de una redirección de autenticación
@@ -82,7 +82,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (isSignedIn && !isInitializing && !loading) {
       const state = location.state as LocationState;
-      // Cambiado: redirigir a /home por defecto en lugar de /
+      // redirigir a /home por defecto
       const from = state?.from?.pathname || '/home';
       navigate(from, { replace: true });
     }
