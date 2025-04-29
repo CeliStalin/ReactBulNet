@@ -29,7 +29,6 @@ const Login: React.FC = () => {
     error, 
     errorAD, 
     errorRoles, 
-    login, 
     logout,
     isInitializing
   } = useAuth();
@@ -91,34 +90,6 @@ const Login: React.FC = () => {
       navigate(from, { replace: true });
     }
   }, [isSignedIn, isInitializing, loading, navigate, location]);
-
-  // Manejar el login utilizando popup
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-    setLocalError(null);
-    
-    try {
-      console.log('Iniciando login desde componente Login con POPUP...');
-      
-      // Configurar para usar el método de popup
-      AuthProvider.setUseRedirectFlow(false);
-      setRedirectMethodUsed(false);
-      
-      // Limpiar sessionStorage para forzar una autenticación limpia
-      sessionStorage.clear();
-      
-      // Usar loginPopup
-      await AuthProvider.login();
-      
-      // Si llegamos aquí, el login fue exitoso
-      console.log('Login con POPUP completado en componente Login');
-    } catch (error) {
-      console.error('Error durante login en componente Login:', error);
-      setLocalError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
 
   // Función que usa redirección para login
   const handleLoginRedirect = async () => {
@@ -191,7 +162,7 @@ const Login: React.FC = () => {
                     <div className="field" style={{ width: '100%' }}>
                       <div className="control">
                         <button 
-                          className="button is-fullwidth"
+                          className="button is-fullwidth is-primary"
                           style={{
                             ...styles.primaryButton,
                             display: 'flex',
@@ -209,28 +180,12 @@ const Login: React.FC = () => {
                     <div className="field" style={{ width: '100%' }}>
                       <div className="control">
                         <button 
-                          className="button is-fullwidth"
+                          className="button is-fullwidth is-primary"
                           style={styles.primaryButton}
-                          onClick={handleLogin}
-                          disabled={isLoggingIn}
-                        >
-                          Iniciar sesión con Azure AD (Popup)
-                        </button>
-                      </div>
-                      
-                      <div className="control mt-3">
-                        <button 
-                          className="button is-fullwidth"
-                          style={{
-                            ...styles.primaryButton,
-                            backgroundColor: 'transparent',
-                            color: theme.colors.primary,
-                            border: `1px solid ${theme.colors.primary}`
-                          }}
                           onClick={handleLoginRedirect}
                           disabled={isLoggingIn}
                         >
-                          Iniciar sesión con Azure AD (Redirección)
+                          Iniciar sesión con Azure AD
                         </button>
                       </div>
                     </div>
@@ -241,7 +196,7 @@ const Login: React.FC = () => {
                       <div className="field" style={{ width: '100%', marginTop: '24px' }}>
                         <div className="control">
                           <button 
-                            className="button is-fullwidth"
+                            className="button is-fullwidth is-primary"
                             style={styles.primaryButton}
                             onClick={handleLogout}
                             disabled={loading}
@@ -254,30 +209,10 @@ const Login: React.FC = () => {
                   )}
                   
                   <ErrorMessages 
-                    error={localError || error}
-                    errorAD={errorAD}
-                    errorRoles={errorRoles}
+                    error={localError || error || undefined}
+                    errorAD={errorAD || undefined}
+                    errorRoles={errorRoles || undefined}
                   />
-                  
-                  {/* Información de depuración */}
-                  {import.meta.env.DEV && (
-                    <div style={{ marginTop: '20px', textAlign: 'left', fontSize: '12px', color: '#666' }}>
-                      <details>
-                        <summary>Información de depuración</summary>
-                        <pre>
-                          {`isSignedIn: ${isSignedIn}
-isInitializing: ${isInitializing}
-loading: ${loading}
-isLoggingIn: ${isLoggingIn}
-redirectMethodUsed: ${redirectMethodUsed}
-authMethod: ${sessionStorage.getItem('authMethod')}
-redirectUri: ${window.location.origin}
-pathname: ${location.pathname}
-`}
-                        </pre>
-                      </details>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
