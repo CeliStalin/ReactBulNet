@@ -1,5 +1,4 @@
-// src/components/NavMenu/NavMenuApp.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ApiGetMenus } from "../../services/GetApiArq";
 import { ElementMenu } from "../../interfaces/IMenusElementos";
@@ -18,36 +17,32 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const { roles, isSignedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
+  const [, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [menuError, setMenuError] = useState<string | null>(null);
+  
+  // Cambiar el estado inicial a true para que esté colapsado por defecto
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  
+  const prevPathRef = useRef(location.pathname);
 
   const userRoles = useMemo(() => {
     return roles.map(role => role.Rol);
   }, [roles]);
-  
-  // Verificación de roles específicos - case insensitive
-  const isDeveloper = useMemo(() => {
-    const normalizedRoles = userRoles.map(role => role.toLowerCase());
-    return normalizedRoles.includes("developers") || 
-                  normalizedRoles.includes("developer");
-  }, [userRoles]);
 
-  // Detectar cambios de ruta y colapsar automáticamente
   useEffect(() => {
-    const shouldAutoCollapse = () => {
-      // Solo colapsar automáticamente si el menú está expandido
-      if (!isCollapsed) {
-        const newState = true;
-        setIsCollapsed(newState);
-        onToggle?.(newState);
-      }
-    };
+    // Al iniciar, establecer el menú como colapsado
+    if (onToggle) {
+      onToggle(true);
+    }
+  }, []);
 
-    // Colapsar cuando cambia la ubicación
-    shouldAutoCollapse();
-  }, [location.pathname]); // Dependencia al pathname para detectar cambios de ruta
+  useEffect(() => {
+    if (prevPathRef.current !== location.pathname && prevPathRef.current !== '') {
+      prevPathRef.current = location.pathname;
+    } else {
+      prevPathRef.current = location.pathname;
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -78,10 +73,9 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
         );
 
         setMenuItems(uniqueMenus);
-        setMenuError(null);
       } catch (error) {
         setMenuItems([]);
-        setMenuError(error instanceof Error ? error.message : String(error));
+        console.error("Error al cargar menús:", error instanceof Error ? error.message : String(error));
       } finally {
         setLoading(false);
       }
@@ -93,10 +87,12 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const handleToggle = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    onToggle?.(newState);
+    if (onToggle) {
+      onToggle(newState);
+    }
   };
 
-  const handleMenuClick = (path: string, title?: string) => {
+  const handleMenuClick = (path: string) => {
     navigate(path);
   };
 
@@ -189,7 +185,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
                       Inicio
                     </span>
                   }
-                  onClick={() => handleMenuClick('/home', "Inicio")} 
+                  onClick={() => handleMenuClick('/home')} 
                   isActive={isPathActive('/home')}
                 />
               </MenuSection>
@@ -199,13 +195,13 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
                 <MenuItem 
                   to="/MnHerederos/ingresoHer"
                   label="Ingreso Herederos"
-                  onClick={() => handleMenuClick('/MnHerederos/ingresoHer', "Ingreso Herederos")}
+                  onClick={() => handleMenuClick('/MnHerederos/ingresoHer')}
                   isActive={isPathActive('/MnHerederos/ingresoHer')}
                 />
                 <MenuItem 
                   to="/MnHerederos/ingresoDoc"
                   label="Ingreso Documentos"
-                  onClick={() => handleMenuClick('/MnHerederos/ingresoDoc', "Ingreso Documentos")}
+                  onClick={() => handleMenuClick('/MnHerederos/ingresoDoc')}
                   isActive={isPathActive('/MnHerederos/ingresoDoc')}
                 />
               </MenuSection>
