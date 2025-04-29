@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { ApiGetMenus } from "../../services/GetApiArq";
 import { ElementMenu } from "../../interfaces/IMenusElementos";
 import useAuth from "../../hooks/useAuth";
@@ -15,26 +15,24 @@ interface NavMenuAppProps {
 
 const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   const { roles, isSignedIn } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [menuItems, setMenuItems] = useState<ElementMenu[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
-  // Cambiar el estado inicial a true para que esté colapsado por defecto
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
   
   const prevPathRef = useRef(location.pathname);
 
-  const userRoles = useMemo(() => {
-    return roles.map(role => role.Rol);
+  // Verificar si el usuario tiene el rol Developers
+  const hasDevelopersRole = useMemo(() => {
+    return roles.some(role => role.Rol === "Developers");
   }, [roles]);
 
   useEffect(() => {
-    // Al iniciar, establecer el menú como colapsado
     if (onToggle) {
       onToggle(true);
     }
-  }, []);
+  }, [onToggle]);
 
   useEffect(() => {
     if (prevPathRef.current !== location.pathname && prevPathRef.current !== '') {
@@ -47,34 +45,27 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        if (userRoles.length === 0) {
+        if (roles.length === 0) {
           setMenuItems([]);
           setLoading(false);
           return;
         }
   
-        const results = await Promise.all(
-          userRoles.map(async (role) => {
-            try {
-              const items = await ApiGetMenus(role);
-
-              return items ? items.filter(item => 
-                item.Rol === role || 
-                item.TipoRol === role
-              ) : [];
-            } catch (err) {
-              return [];
-            }
-          })
-        );
-        
-        const allMenus = results.flat();
-        
-        const uniqueMenus = Array.from(
-          new Map(allMenus.map(item => [item.Id, item])).values()
-        );
-  
-        setMenuItems(uniqueMenus);
+        // Solo cargar menús si el usuario tiene el rol Developers
+        if (hasDevelopersRole) {
+          const items = await ApiGetMenus("Developers");
+          // Filtrar los elementos problemáticos "IngresoDoc" e "IngresoHer"
+          const filteredItems = (items || []).filter(item => 
+            !item.Nombre?.includes("IngresoDoc") && 
+            !item.Nombre?.includes("IngresoHer") &&
+            !item.Controlador?.includes("IngresoDoc") && 
+            !item.Controlador?.includes("IngresoHer")
+          );
+          setMenuItems(filteredItems);
+        } else {
+          // Si no tiene rol Developers, dejar el menú vacío
+          setMenuItems([]);
+        }
       } catch (error) {
         setMenuItems([]);
         console.error("Error al cargar menús:", error instanceof Error ? error.message : String(error));
@@ -84,7 +75,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     };
   
     fetchMenu();
-  }, [userRoles]);
+  }, [hasDevelopersRole, roles]);
 
   const handleToggle = () => {
     const newState = !isCollapsed;
@@ -92,10 +83,6 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     if (onToggle) {
       onToggle(newState);
     }
-  };
-
-  const handleMenuClick = (path: string) => {
-    navigate(path);
   };
 
   const isPathActive = (path: string): boolean => {
@@ -144,6 +131,18 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     return null;
   }
 
+  // Opciones fijas para el menú de Herederos (estas son las que funcionan correctamente)
+  const menuHerederos = [
+    {
+      path: "/MnHerederos/ingresoHer",
+      label: "Ingreso Herederos"
+    },
+    {
+      path: "/MnHerederos/ingresoDoc",
+      label: "Ingreso Documentos"
+    }
+  ];
+
   return (
     <div className="columns is-gapless">
       <div 
@@ -164,7 +163,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
           
           <div style={navMenuStyles.menuContent(isCollapsed)}>
             <ul className="menu-list" style={{ padding: 0 }}>
-              {/* Menú Básico - Inicio */}
+              {/* Menú Básico - Inicio (visible para todos los roles) */}
               <MenuSection>
                 <MenuItem 
                   to="/home" 
@@ -187,40 +186,34 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
                       Inicio
                     </span>
                   }
-                  onClick={() => handleMenuClick('/home')} 
                   isActive={isPathActive('/home')}
                 />
               </MenuSection>
 
-            {/* Menú de Aplicaciones simplificado */}
-<MenuSection title="Aplicaciones">
-  {menuItems.length > 0 ? (
-    menuItems.map((item) => (
-      <MenuItem 
-        key={item.Id}
-        to={item.Controlador}
-        label={item.Nombre}
-        onClick={() => handleMenuClick(item.Controlador)}
-        isActive={isPathActive(item.Controlador)}
-      />
-    ))
-  ) : (
-    <>
-      <MenuItem 
-        to="/MnHerederos/ingresoHer"
-        label="Ingreso Herederos"
-        onClick={() => handleMenuClick('/MnHerederos/ingresoHer')}
-        isActive={isPathActive('/MnHerederos/ingresoHer')}
-      />
-      <MenuItem 
-        to="/MnHerederos/ingresoDoc"
-        label="Ingreso Documentos"
-        onClick={() => handleMenuClick('/MnHerederos/ingresoDoc')}
-        isActive={isPathActive('/MnHerederos/ingresoDoc')}
-      />
-    </>
-  )}
-</MenuSection>
+              {/* Menú de Aplicaciones - Solo visible para rol Developers */}
+              {hasDevelopersRole && (
+                <MenuSection title="Aplicaciones">
+                  {/* SIEMPRE mostrar las opciones que funcionan */}
+                  {menuHerederos.map((item, index) => (
+                    <MenuItem 
+                      key={`herederos-${index}`}
+                      to={item.path}
+                      label={item.label}
+                      isActive={isPathActive(item.path)}
+                    />
+                  ))}
+                  
+                  {/* Mostrar el resto de los elementos de la API (si hay) */}
+                  {menuItems && menuItems.length > 0 && menuItems.map((item) => (
+                    <MenuItem 
+                      key={item.Id}
+                      to={item.Controlador}
+                      label={item.Nombre}
+                      isActive={isPathActive(item.Controlador)}
+                    />
+                  ))}
+                </MenuSection>
+              )}
             </ul>
           </div>
         </aside>
