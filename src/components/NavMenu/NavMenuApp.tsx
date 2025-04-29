@@ -54,14 +54,7 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
         // Solo cargar menús si el usuario tiene el rol 
         if (hasDevelopersRole) {
           const items = await ApiGetMenus("Developers");
-          // Filtrar los elementos problemáticos "IngresoDoc" e "IngresoHer"
-          const filteredItems = (items || []).filter(item => 
-            !item.Nombre?.includes("IngresoDoc") && 
-            !item.Nombre?.includes("IngresoHer") &&
-            !item.Controlador?.includes("IngresoDoc") && 
-            !item.Controlador?.includes("IngresoHer")
-          );
-          setMenuItems(filteredItems);
+          setMenuItems(items || []);
         } else {
           // Si no tiene rol Developers, dejar el menú vacío
           setMenuItems([]);
@@ -83,6 +76,13 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
     if (onToggle) {
       onToggle(newState);
     }
+  };
+
+  // Esta función construye correctamente la URL para cada elemento del menú
+  const buildMenuItemPath = (controlador: string, accion: string): string => {
+    // Convertir primera letra a minúscula para controlador si es necesario
+    const formattedControlador = controlador.charAt(0).toLowerCase() + controlador.slice(1);
+    return `/${formattedControlador}/${accion}`;
   };
 
   const isPathActive = (path: string): boolean => {
@@ -130,18 +130,6 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
   if (!isSignedIn) {
     return null;
   }
-
-  // Opciones para el menú de Herederos 
-  const menuHerederos = [
-    {
-      path: "/MnHerederos/ingresoHer",
-      label: "Ingreso Herederos"
-    },
-    {
-      path: "/MnHerederos/ingresoDoc",
-      label: "Ingreso Documentos"
-    }
-  ];
 
   return (
     <div className="columns is-gapless">
@@ -191,27 +179,22 @@ const NavMenuApp: React.FC<NavMenuAppProps> = ({ onToggle }) => {
               </MenuSection>
 
               {/* Menú de Aplicaciones - Solo visible para rol Developers */}
-              {hasDevelopersRole && (
+              {hasDevelopersRole && menuItems.length > 0 && (
                 <MenuSection title="Aplicaciones">
-                  {/* SIEMPRE mostrar las opciones que funcionan */}
-                  {menuHerederos.map((item, index) => (
-                    <MenuItem 
-                      key={`herederos-${index}`}
-                      to={item.path}
-                      label={item.label}
-                      isActive={isPathActive(item.path)}
-                    />
-                  ))}
-                  
-                  {/* Mostrar el resto de los elementos de la API (si hay) */}
-                  {menuItems && menuItems.length > 0 && menuItems.map((item) => (
-                    <MenuItem 
-                      key={item.Id}
-                      to={item.Controlador}
-                      label={item.Nombre}
-                      isActive={isPathActive(item.Controlador)}
-                    />
-                  ))}
+                  {/* Mostrar solo los elementos que vienen de la API */}
+                  {menuItems.map((item) => {
+                    // Construir la ruta correctamente usando controlador y acción
+                    const itemPath = buildMenuItemPath(item.Controlador, item.Accion);
+                    
+                    return (
+                      <MenuItem 
+                        key={item.Id}
+                        to={itemPath}
+                        label={item.Descripcion} // Usar la descripción como etiqueta del menú
+                        isActive={isPathActive(itemPath)}
+                      />
+                    );
+                  })}
                 </MenuSection>
               )}
             </ul>
