@@ -39,6 +39,7 @@ const Login: React.FC = () => {
     const savedMethod = sessionStorage.getItem('authMethod');
     return savedMethod === 'redirect';
   });
+  const [isCheckingNetwork, setIsCheckingNetwork] = useState(false);
 
   // Al montar el componente, verifica si hay un parámetro en la URL que indique redirección
   useEffect(() => {
@@ -88,14 +89,73 @@ const Login: React.FC = () => {
     }
   }, [isSignedIn, isInitializing, loading, navigate, location]);
 
-  // Función que usa redirección para login
+  // Función para verificar acceso a la red corporativa
+  const checkNetworkAccess = async (): Promise<boolean> => {
+    try {
+      setIsCheckingNetwork(true);
+      
+      // Intentar hacer una solicitud simple a un endpoint de la API
+      // Este endpoint debería ser accesible solo desde la red corporativa o VPN
+      const apiUrl = import.meta.env.VITE_API_ARQUITECTURA_URL || import.meta.env.VITE_APP_API_ARQUITECTURA_URL;
+      
+      // Usar un endpoint que devuelva una respuesta rápida, como /health o similar
+      // Si no existe un endpoint específico, usa cualquier endpoint conocido
+      const testUrl = `${apiUrl}/Usuario/test`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
+      
+      try {
+        const response = await fetch(testUrl, {
+          method: 'HEAD', // Solo verifica que el servidor responda, sin descargar contenido
+          signal: controller.signal,
+          headers: {
+            // Añadir cualquier header necesario para la API
+            [import.meta.env.VITE_NAME_API_KEY || import.meta.env.VITE_APP_NAME_API_KEY]: 
+              import.meta.env.VITE_KEY_PASS_API_ARQ || import.meta.env.VITE_APP_KEY_PASS_API_ARQ
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Si llegamos aquí, podemos acceder a la API
+        return response.status < 500; // Consideramos cualquier respuesta que no sea error del servidor
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        console.warn('Error al verificar conectividad con la API:', fetchError);
+        
+        // Si es un error de CORS, podríamos estar en la red correcta pero con restricciones
+        // En ese caso, consideramos que hay acceso a la red
+        if (fetchError instanceof TypeError && fetchError.message.includes('CORS')) {
+          return true;
+        }
+        
+        return false;
+      }
+    } catch (error) {
+      console.error('Error general al verificar acceso a la red:', error);
+      return false;
+    } finally {
+      setIsCheckingNetwork(false);
+    }
+  };
+
+  // Función que usa redirección para login con verificación de red
   const handleLoginRedirect = async () => {
     setIsLoggingIn(true);
     setLocalError(null);
     
     try {
+      // Verificar primero si tiene acceso a la red corporativa
+      const hasNetworkAccess = await checkNetworkAccess();
+      
+      if (!hasNetworkAccess) {
+        setLocalError('No es posible iniciar sesión fuera de la red corporativa de Consalud. Por favor, conéctese a la VPN para continuar.');
+        setIsLoggingIn(false);
+        return;
+      }
 
-      // Configurar para usar el método de redirección
+      // Continuar con el flujo normal de login
       AuthProvider.setUseRedirectFlow(true);
       setRedirectMethodUsed(true);
       
@@ -152,7 +212,7 @@ const Login: React.FC = () => {
                     </span>
                   </h1>
                   
-                  {loading || isLoggingIn || isInitializing ? (
+                  {loading || isLoggingIn || isInitializing || isCheckingNetwork ? (
                     <div className="field" style={{ width: '100%' }}>
                       <div className="control">
                         <button 
@@ -167,6 +227,9 @@ const Login: React.FC = () => {
                           disabled={true}
                         >
                           <LoadingDots size="small" />
+                          <span style={{ marginLeft: '8px' }}>
+                            {isCheckingNetwork ? 'Verificando red...' : 'Cargando...'}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -182,6 +245,9 @@ const Login: React.FC = () => {
                           Iniciar sesión con Azure AD
                         </button>
                       </div>
+                      <p className="help mt-2" style={{ textAlign: 'center', fontSize: '12px', color: '#666' }}>
+                        Nota: Para acceder, debe estar conectado a la red de Consalud o usar VPN.
+                      </p>
                     </div>
                   ) : (
                     <>
