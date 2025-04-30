@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { LoadingOverlay } from '@/components/common/Loading/LoadingOverlay';
+import { useAuth } from '@/core/hooks/useAuth';
+import { LoadingOverlay } from '@/core/components/Loading/LoadingOverlay';
 
 interface PublicRouteProps {
   children: React.ReactNode;
