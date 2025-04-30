@@ -21,6 +21,8 @@ export const titleStyles = {
     textAlign: 'center' as const,
     fontSize: '14px', 
     lineHeight: theme.typography.lineHeight.normal,
+    margin: '0 auto', 
+    padding: '0 20px', 
   };
 
 export const primaryButton = {
